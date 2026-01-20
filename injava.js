@@ -1420,20 +1420,27 @@ function generateBulkForms(data, schoolName) {
     }, 1000);
 }
 
-// 6. وظيفة الطباعة للجدول (بالتصميم الرسمي الجديد المعدل)
+// 6. وظيفة الطباعة للجدول (معدلة: إخفاء غير المؤكدين + تكبير الجدول)
 function printCurrentTable(schoolName) {
     const data = window.currentListContext;
     if (!data || data.length === 0) return;
 
+    // 1. الفلترة: استبعاد غير المؤكدين
+    const confirmedOnly = data.filter(d => d.confirmed === true || String(d.confirmed).toLowerCase() === "true");
+
+    if (confirmedOnly.length === 0) {
+        return Swal.fire("تنبيه", "لا توجد قائمة مؤكدة للطباعة", "warning");
+    }
+
     // الحصول على التواريخ والبيانات
     const dateObj = new Date();
     const currentYear = dateObj.getFullYear();
-    const dateStr = dateObj.toLocaleDateString('ar-DZ'); // تاريخ اليوم
-    const baladiya = (data[0] && data[0].baladiya) ? data[0].baladiya : "................";
+    const dateStr = dateObj.toLocaleDateString('ar-DZ'); 
+    const baladiya = (confirmedOnly[0] && confirmedOnly[0].baladiya) ? confirmedOnly[0].baladiya : "................";
 
-    // بناء صفوف الجدول
+    // بناء صفوف الجدول (باستخدام القائمة المفلترة)
     let rowsHtml = '';
-    data.forEach((emp, index) => {
+    confirmedOnly.forEach((emp, index) => {
         rowsHtml += `
             <tr>
                 <td style="text-align:center;">${index + 1}</td>
@@ -1450,8 +1457,8 @@ function printCurrentTable(schoolName) {
     const printContent = `
         <style>
             @page { 
-                size: A4 landscape; /* اتجاه أفقي لتوفير مساحة */
-                margin: 10mm; /* هامش 1 سم */
+                size: A4 landscape; /* اتجاه أفقي */
+                margin: 10mm; 
             }
             body { 
                 font-family: 'Amiri', 'Traditional Arabic', serif; 
@@ -1460,35 +1467,58 @@ function printCurrentTable(schoolName) {
             }
             table {
                 width: 100%;
-                border-collapse: collapse; /* حدود متلاصقة */
+                border-collapse: collapse; 
+                margin-top: 10px;
             }
             th, td {
-                border: 1px solid #000; /* حدود سوداء واضحة */
-                padding: 4px;
-                white-space: nowrap; /* منع الكتابة في سطرين */
-                font-size: 12px;
+                border: 1px solid #000; 
+                padding: 8px 5px; /* تكبير الحشو */
+                white-space: nowrap; 
+                font-size: 14px; /* تكبير الخط */
             }
             th {
                 background-color: #f0f0f0;
                 font-weight: bold;
                 text-align: center;
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+            /* تنسيق العناوين لتملأ الصفحة */
+            .header-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 30px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .title-box {
+                text-align: center;
+                margin: 20px 0;
+            }
+            .title-box h2 {
+                text-decoration: underline;
+                font-size: 24px;
+                margin: 10px 0;
             }
         </style>
 
         <div class="print-page">
             
-            <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 20px;">
-                <p style="margin: 0;">الجمهورية الجزائرية الديمقراطية الشعبية</p>
-                <p style="margin: 5px 0;">وزارة التربية الوطنية</p>
+            <div style="text-align: center; font-weight: bold; font-size: 18px; margin-bottom: 35px; line-height: 1.6;">
+                <div>الجمهورية الجزائرية الديمقراطية الشعبية</div>
+                <div>وزارة التربية الوطنية</div>
             </div>
 
-            <div style="text-align: right; font-size: 14px; font-weight: bold; margin-bottom: 10px;">
-                <p style="margin: 2px 0;">مديرية التربية لولاية توقرت</p>
-                <p style="margin: 2px 0;">المؤسسة: ${schoolName}</p>
-                <p style="margin: 2px 0;">الرقم: ....... / ${currentYear}</p>
+            <div style="text-align: right; font-size: 15px; font-weight: bold; margin-bottom: 15px;">
+                <div style="margin-bottom: 5px;">مديرية التربية لولاية توقرت</div>
+                <div style="margin-bottom: 5px;">المؤسسة: ${schoolName}</div>
+                <div>الرقم: ....... / ${currentYear}</div>
             </div>
 
-            <h2 style="text-align: center; text-decoration: underline; margin: 20px 0; font-size: 20px;">قائمة موظفي المؤسسة</h2>
+            <div class="title-box">
+                <h2>قائمة موظفي المؤسسة</h2>
+            </div>
 
             <table>
                 <thead>
@@ -1507,9 +1537,9 @@ function printCurrentTable(schoolName) {
                 </tbody>
             </table>
 
-            <div style="margin-top: 30px; display: flex; justify-content: flex-end; padding-left: 50px;">
-                <div style="text-align: left; font-weight: bold; font-size: 14px;">
-                    <p style="margin-bottom: 10px;">حرر بـ : ${baladiya} &nbsp;&nbsp;&nbsp; في: ${dateStr}</p>
+            <div style="margin-top: 40px; display: flex; justify-content: flex-end; padding-left: 50px;">
+                <div style="text-align: left; font-weight: bold; font-size: 16px;">
+                    <p style="margin-bottom: 15px;">حرر بـ : ${baladiya}     في: ${dateStr}</p>
                     <p>المدير(ة):</p>
                 </div>
             </div>
