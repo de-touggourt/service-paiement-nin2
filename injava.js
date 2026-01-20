@@ -1230,7 +1230,7 @@ async function fetchAndHandleData(schoolName, mode) {
     }
 }
 
-// 4. عرض القائمة (الجدول) - بتنسيق جديد ومحسن
+// 4. عرض القائمة (الجدول) - بتنسيق أزرار جديد وضغط الجدول
 function generateEmployeesTable(data, schoolName) {
     // 1. حساب الإحصائيات
     const total = data.length;
@@ -1242,66 +1242,99 @@ function generateEmployeesTable(data, schoolName) {
     data.forEach((emp, index) => {
         const isConfirmed = (emp.confirmed === true || String(emp.confirmed).toLowerCase() === "true");
         
-        // تنسيق الحالة باستخدام شارات ملونة (Badges)
         const statusBadge = isConfirmed 
-            ? `<span style="background-color:#d4edda; color:#155724; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid #c3e6cb;">مؤكد</span>` 
-            : `<span style="background-color:#f8d7da; color:#721c24; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid #f5c6cb;">غير مؤكد</span>`;
+            ? `<span style="background-color:#d4edda; color:#155724; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; border: 1px solid #c3e6cb;">مؤكد</span>` 
+            : `<span style="background-color:#f8d7da; color:#721c24; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; border: 1px solid #f5c6cb;">غير مؤكد</span>`;
 
         rows += `
-            <tr onclick="showEmployeeDetails('${emp.ccp}')" style="cursor:pointer; transition:all 0.2s ease; border-bottom: 1px solid #eee;">
-                <td style="padding: 12px 8px; font-weight:bold;">${index + 1}</td>
-                <td style="padding: 12px 8px; font-family: monospace; font-size:13px; color:#555;">${emp.nin || '-'}</td>
-                <td style="padding: 12px 8px; color:#2c3e50; font-weight:600;">${emp.fmn}</td>
-                <td style="padding: 12px 8px; color:#2c3e50; font-weight:600;">${emp.frn}</td>
-                <td style="padding: 12px 8px;">${fmtDate(emp.diz)}</td>
-                <td style="padding: 12px 8px; font-size:12px;">${getJob(emp.gr)}</td>
-                <td style="padding: 12px 8px;">${statusBadge}</td>
+            <tr onclick="showEmployeeDetails('${emp.ccp}')" style="cursor:pointer; transition:all 0.1s ease; border-bottom: 1px solid #eee;">
+                <td style="font-weight:bold;">${index + 1}</td>
+                <td style="font-family: monospace; color:#555;">${emp.nin || '-'}</td>
+                <td style="color:#2c3e50; font-weight:600;">${emp.fmn}</td>
+                <td style="color:#2c3e50; font-weight:600;">${emp.frn}</td>
+                <td>${fmtDate(emp.diz)}</td>
+                <td style="font-size:11px;">${getJob(emp.gr)}</td>
+                <td>${statusBadge}</td>
             </tr>
         `;
     });
 
-    // 3. بناء الهيكل الكامل (عنوان + إحصائيات + جدول)
+    // 3. بناء الهيكل (CSS محسن للأزرار وضغط الجدول)
     const tableHtml = `
         <style>
-            .stat-card { background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border: 1px solid #e9ecef; margin: 0 5px; display: inline-block; font-size: 13px; }
-            .stat-num { font-weight: bold; font-size: 15px; margin-right: 5px; }
+            /* تنسيق البطاقات الإحصائية */
+            .stat-card { background: #f8f9fa; padding: 5px 10px; border-radius: 6px; border: 1px solid #e9ecef; margin: 0 3px; display: inline-block; font-size: 12px; }
+            .stat-num { font-weight: bold; font-size: 13px; margin-right: 3px; }
+            
+            /* تنسيق الجدول المضغوط */
             .modern-table { width: 100%; border-collapse: collapse; text-align: right; direction: rtl; font-family: 'Cairo', sans-serif; }
-            .modern-table thead th { background: #2575fc; color: white; padding: 12px; font-weight: normal; font-size: 13px; position: sticky; top: 0; z-index: 10; }
-            .modern-table tbody tr:hover { background-color: #f1f3f5 !important; transform: scale(1.005); }
+            .modern-table thead th { background: #2575fc; color: white; padding: 8px 5px; font-weight: normal; font-size: 12px; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+            .modern-table tbody td { padding: 6px 5px; font-size: 11.5px; white-space: nowrap; } /* خلايا مضغوطة */
+            .modern-table tbody tr:hover { background-color: #f1f3f5 !important; }
             .modern-table tbody tr:nth-child(even) { background-color: #fbfbfb; }
+
+            /* تنسيق الأزرار الجديد */
+            .custom-btn-group { margin: 10px 0; display: flex; justify-content: center; gap: 8px; }
+            .action-btn {
+                padding: 6px 15px;
+                font-size: 12px;
+                border-radius: 5px;
+                border: none;
+                color: white;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-family: 'Cairo', sans-serif;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.1s, box-shadow 0.1s;
+            }
+            .action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+            .action-btn:active { transform: translateY(0); }
+            
+            /* ألوان الأزرار */
+            .btn-excel { background-color: #28a745; } /* أخضر */
+            .btn-excel:hover { background-color: #218838; }
+            
+            .btn-print { background-color: #343a40; } /* أسود فاتح/رمادي غامق */
+            .btn-print:hover { background-color: #23272b; }
         </style>
 
-        <div style="text-align:center; margin-bottom:15px;">
-            <h3 style="color:#2575fc; margin-bottom: 5px; font-family: 'Cairo', sans-serif;">${schoolName}</h3>
+        <div style="text-align:center; margin-bottom:10px;">
+            <h3 style="color:#2575fc; margin-bottom: 8px; font-size: 16px; font-family: 'Cairo', sans-serif;">${schoolName}</h3>
             
-            <div style="margin-bottom: 15px; display: flex; justify-content: center; gap: 10px;">
+            <div style="margin-bottom: 10px;">
                 <div class="stat-card" style="border-right: 3px solid #2575fc;">
-                    إجمالي الموظفين: <span class="stat-num" style="color: #2575fc;">${total}</span>
+                    إجمالي: <span class="stat-num" style="color: #2575fc;">${total}</span>
                 </div>
                 <div class="stat-card" style="border-right: 3px solid #28a745;">
-                    المؤكدين: <span class="stat-num" style="color: #28a745;">${confirmedCount}</span>
+                    المؤكد: <span class="stat-num" style="color: #28a745;">${confirmedCount}</span>
                 </div>
                 <div class="stat-card" style="border-right: 3px solid #dc3545;">
-                    غير المؤكدين: <span class="stat-num" style="color: #dc3545;">${unconfirmedCount}</span>
+                    غير المؤكد: <span class="stat-num" style="color: #dc3545;">${unconfirmedCount}</span>
                 </div>
             </div>
 
-            <div style="margin: 10px 0;">
-                <button onclick="printCurrentTable()" class="btn-main" style="padding: 8px 20px; font-size: 13px; background-color: #6c757d; border:none; margin-left:5px;"><i class="fas fa-print"></i> طباعة القائمة</button>
-                <button onclick="exportTableToExcel('empTable', '${schoolName}')" class="btn-main" style="padding: 8px 20px; font-size: 13px; background-color: #28a745; border:none;"><i class="fas fa-file-excel"></i> تحميل Excel</button>
+            <div class="custom-btn-group">
+                <button onclick="printCurrentTable()" class="action-btn btn-print">
+                    <i class="fas fa-print"></i> طباعة القائمة
+                </button>
+                <button onclick="exportTableToExcel('empTable', '${schoolName}')" class="action-btn btn-excel">
+                    <i class="fas fa-file-excel"></i> تحميل Excel
+                </button>
             </div>
         </div>
 
-        <div style="overflow-x:auto; overflow-y:auto; max-height:500px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <div style="overflow-x:auto; overflow-y:auto; max-height:65vh; border-radius: 6px; border: 1px solid #ddd;">
             <table id="empTable" class="modern-table">
                 <thead>
                     <tr>
                         <th width="5%">#</th>
-                        <th width="15%">رقم التعريف (NIN)</th>
+                        <th width="15%">رقم التعريف</th>
                         <th width="15%">اللقب</th>
                         <th width="15%">الاسم</th>
-                        <th width="12%">تاريخ الميلاد</th>
-                        <th width="23%">الرتبة</th>
+                        <th width="10%">تاريخ الميلاد</th>
+                        <th width="25%">الرتبة</th>
                         <th width="15%">الحالة</th>
                     </tr>
                 </thead>
@@ -1310,17 +1343,17 @@ function generateEmployeesTable(data, schoolName) {
         </div>
     `;
 
-    // تخزين البيانات مؤقتاً للوصول للتفاصيل
     window.currentListContext = data;
 
     Swal.fire({
-        title: '', // العنوان مدمج في الـ HTML
+        title: '',
         html: tableHtml,
-        width: '95%', // عرض النافذة ليحتوي الجدول براحة
+        width: 'auto', // عرض تلقائي لضغط النافذة
+        maxWidth: '90%', // لا تتجاوز 90% من الشاشة
         showConfirmButton: false,
         showCloseButton: true,
         background: '#fff',
-        padding: '20px'
+        padding: '15px'
     });
 }
 
@@ -1445,3 +1478,4 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
+
