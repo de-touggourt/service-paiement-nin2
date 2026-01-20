@@ -169,7 +169,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // 🛑🛑🛑 استبدل هذا الرابط برابط السكريبت الخاص بك 🛑🛑🛑
-const scriptURL = "https://script.google.com/macros/s/AKfycbypaQgVu16EFOMnxN7fzdFIFtiLiLjPX0xcwxEUjG5gsoeZ8yQJ5OL5IwIlJMgsrAJxwA/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyOh4iBhiNygPkg1bj01m-8WOjgL0BxWnfchTIA13JtxFTLf0wRB3Gxf5ZXWD65p2Ax/exec";
 
 // --- خريطة الرتب ---
 const gradeMap = {
@@ -1386,3 +1386,4 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
+
