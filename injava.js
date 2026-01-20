@@ -169,7 +169,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // 🛑🛑🛑 استبدل هذا الرابط برابط السكريبت الخاص بك 🛑🛑🛑
-const scriptURL = "https://script.google.com/macros/s/AKfycbwsxUBjPTuywIxGCifdBi0teqU_XVb02SiMG9jwgq3a7aFJZF2SLOch7ijXKghIHRFZ/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyyLvN_8-H7qv2vAdsw360TE8seYWAV2pGbQ2jSHbc0aVd65gpeRc4CCt6_lgrStZZY/exec";
 
 // --- خريطة الرتب ---
 const gradeMap = {
@@ -1230,7 +1230,6 @@ async function fetchAndHandleData(schoolName, mode) {
     }
 }
 
-// 4. عرض القائمة (الجدول)
 // 4. عرض القائمة (الجدول) - بتنسيق جديد ومحسن
 function generateEmployeesTable(data, schoolName) {
     // 1. حساب الإحصائيات
@@ -1266,6 +1265,7 @@ function generateEmployeesTable(data, schoolName) {
         <style>
             .stat-card { background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border: 1px solid #e9ecef; margin: 0 5px; display: inline-block; font-size: 13px; }
             .stat-num { font-weight: bold; font-size: 15px; margin-right: 5px; }
+            .modern-table { width: 100%; border-collapse: collapse; text-align: right; direction: rtl; font-family: 'Cairo', sans-serif; }
             .modern-table thead th { background: #2575fc; color: white; padding: 12px; font-weight: normal; font-size: 13px; position: sticky; top: 0; z-index: 10; }
             .modern-table tbody tr:hover { background-color: #f1f3f5 !important; transform: scale(1.005); }
             .modern-table tbody tr:nth-child(even) { background-color: #fbfbfb; }
@@ -1293,7 +1293,7 @@ function generateEmployeesTable(data, schoolName) {
         </div>
 
         <div style="overflow-x:auto; overflow-y:auto; max-height:500px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <table id="empTable" class="modern-table" style="width:100%; border-collapse: collapse; text-align: right; direction: rtl; font-family: 'Cairo', sans-serif;">
+            <table id="empTable" class="modern-table">
                 <thead>
                     <tr>
                         <th width="5%">#</th>
@@ -1324,21 +1324,44 @@ function generateEmployeesTable(data, schoolName) {
     });
 }
 
-// عرض تفاصيل موظف من الجدول
+// عرض تفاصيل موظف من الجدول (معدلة لتوجيه غير المؤكدين للتأكيد)
 function showEmployeeDetails(ccp) {
     const emp = window.currentListContext.find(e => e.ccp == ccp || e.empId == ccp);
-    if(emp) showConfirmedModal(emp); 
+    if(emp) {
+        currentEmployeeData = emp;
+        const isConfirmed = (emp.confirmed === true || String(emp.confirmed).toLowerCase() === "true");
+
+        if (isConfirmed) {
+            // إذا كان مؤكداً -> اعرض الاستمارة الخضراء
+            showConfirmedModal(emp);
+        } else {
+            // إذا لم يكن مؤكداً -> اعرض نافذة المراجعة الحمراء
+            showReviewModal(emp, "admin_review");
+        }
+    }
 }
 
-// 5. الطباعة المجمعة للاستمارات
+// 5. الطباعة المجمعة للاستمارات (معدلة: تطبع المؤكدين فقط)
 function generateBulkForms(data, schoolName) {
+    // تصفية البيانات: نأخذ فقط الموظفين الذين لديهم confirmed = true
+    const confirmedOnly = data.filter(d => d.confirmed === true || String(d.confirmed).toLowerCase() === "true");
+
+    if (confirmedOnly.length === 0) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'تنبيه',
+            text: 'لا توجد استمارات مؤكدة للطباعة في هذه المؤسسة.',
+            confirmButtonColor: '#2575fc'
+        });
+    }
+
     const printContainer = document.getElementById("printContainer");
     const originalContent = printContainer.innerHTML; // حفظ الهيكل الأصلي
     
     let bulkContent = '';
     const dateStr = new Date().toLocaleDateString('ar-DZ');
 
-    data.forEach(d => {
+    confirmedOnly.forEach(d => {
         // إنشاء صفحة لكل موظف (Page Break)
         bulkContent += `
         <div class="print-page" style="page-break-after: always; padding-top:20px;">
@@ -1422,8 +1445,3 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
-
-
-
-
-
