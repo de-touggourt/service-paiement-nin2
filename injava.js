@@ -169,7 +169,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // 🛑🛑🛑 استبدل هذا الرابط برابط السكريبت الخاص بك 🛑🛑🛑
-const scriptURL = "https://script.google.com/macros/s/AKfycbwsxUBjPTuywIxGCifdBi0teqU_XVb02SiMG9jwgq3a7aFJZF2SLOch7ijXKghIHRFZ/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyyLvN_8-H7qv2vAdsw360TE8seYWAV2pGbQ2jSHbc0aVd65gpeRc4CCt6_lgrStZZY/exec";
 
 // --- خريطة الرتب ---
 const gradeMap = {
@@ -1231,78 +1231,44 @@ async function fetchAndHandleData(schoolName, mode) {
 }
 
 // 4. عرض القائمة (الجدول)
-// 4. عرض القائمة (الجدول) - بتنسيق جديد ومحسن
 function generateEmployeesTable(data, schoolName) {
-    // 1. حساب الإحصائيات
-    const total = data.length;
-    const confirmedCount = data.filter(e => (e.confirmed === true || String(e.confirmed).toLowerCase() === "true")).length;
-    const unconfirmedCount = total - confirmedCount;
-
-    // 2. بناء الأسطر
     let rows = '';
     data.forEach((emp, index) => {
-        const isConfirmed = (emp.confirmed === true || String(emp.confirmed).toLowerCase() === "true");
+        const isConfirmed = (emp.confirmed === true || String(emp.confirmed) === "true");
+        const statusIcon = isConfirmed ? '<span style="color:green">✔</span>' : '<span style="color:red">✘</span>';
         
-        // تنسيق الحالة باستخدام شارات ملونة (Badges)
-        const statusBadge = isConfirmed 
-            ? `<span style="background-color:#d4edda; color:#155724; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid #c3e6cb;">مؤكد</span>` 
-            : `<span style="background-color:#f8d7da; color:#721c24; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid #f5c6cb;">غير مؤكد</span>`;
-
         rows += `
-            <tr onclick="showEmployeeDetails('${emp.ccp}')" style="cursor:pointer; transition:all 0.2s ease; border-bottom: 1px solid #eee;">
-                <td style="padding: 12px 8px; font-weight:bold;">${index + 1}</td>
-                <td style="padding: 12px 8px; font-family: monospace; font-size:13px; color:#555;">${emp.nin || '-'}</td>
-                <td style="padding: 12px 8px; color:#2c3e50; font-weight:600;">${emp.fmn}</td>
-                <td style="padding: 12px 8px; color:#2c3e50; font-weight:600;">${emp.frn}</td>
-                <td style="padding: 12px 8px;">${fmtDate(emp.diz)}</td>
-                <td style="padding: 12px 8px; font-size:12px;">${getJob(emp.gr)}</td>
-                <td style="padding: 12px 8px;">${statusBadge}</td>
+            <tr onclick="showEmployeeDetails('${emp.ccp}')" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#f1f1f1'" onmouseout="this.style.background='transparent'">
+                <td>${index + 1}</td>
+                <td>${emp.nin || '-'}</td>
+                <td>${emp.fmn}</td>
+                <td>${emp.frn}</td>
+                <td>${fmtDate(emp.diz)}</td>
+                <td>${getJob(emp.gr)}</td>
+                <td>${statusIcon}</td>
             </tr>
         `;
     });
 
-    // 3. بناء الهيكل الكامل (عنوان + إحصائيات + جدول)
     const tableHtml = `
-        <style>
-            .stat-card { background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border: 1px solid #e9ecef; margin: 0 5px; display: inline-block; font-size: 13px; }
-            .stat-num { font-weight: bold; font-size: 15px; margin-right: 5px; }
-            .modern-table thead th { background: #2575fc; color: white; padding: 12px; font-weight: normal; font-size: 13px; position: sticky; top: 0; z-index: 10; }
-            .modern-table tbody tr:hover { background-color: #f1f3f5 !important; transform: scale(1.005); }
-            .modern-table tbody tr:nth-child(even) { background-color: #fbfbfb; }
-        </style>
-
-        <div style="text-align:center; margin-bottom:15px;">
-            <h3 style="color:#2575fc; margin-bottom: 5px; font-family: 'Cairo', sans-serif;">${schoolName}</h3>
-            
-            <div style="margin-bottom: 15px; display: flex; justify-content: center; gap: 10px;">
-                <div class="stat-card" style="border-right: 3px solid #2575fc;">
-                    إجمالي الموظفين: <span class="stat-num" style="color: #2575fc;">${total}</span>
-                </div>
-                <div class="stat-card" style="border-right: 3px solid #28a745;">
-                    المؤكدين: <span class="stat-num" style="color: #28a745;">${confirmedCount}</span>
-                </div>
-                <div class="stat-card" style="border-right: 3px solid #dc3545;">
-                    غير المؤكدين: <span class="stat-num" style="color: #dc3545;">${unconfirmedCount}</span>
-                </div>
-            </div>
-
+        <div style="text-align:center; margin-bottom:10px;">
+            <h3 style="color:#2575fc;">${schoolName}</h3>
             <div style="margin: 10px 0;">
-                <button onclick="printCurrentTable()" class="btn-main" style="padding: 8px 20px; font-size: 13px; background-color: #6c757d; border:none; margin-left:5px;"><i class="fas fa-print"></i> طباعة القائمة</button>
-                <button onclick="exportTableToExcel('empTable', '${schoolName}')" class="btn-main" style="padding: 8px 20px; font-size: 13px; background-color: #28a745; border:none;"><i class="fas fa-file-excel"></i> تحميل Excel</button>
+                <button onclick="printCurrentTable()" class="swal2-confirm swal2-styled" style="background-color: #6c757d;">طباعة القائمة</button>
+                <button onclick="exportTableToExcel('empTable', '${schoolName}')" class="swal2-confirm swal2-styled" style="background-color: #28a745;">Excel تحميل</button>
             </div>
         </div>
-
-        <div style="overflow-x:auto; overflow-y:auto; max-height:500px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-            <table id="empTable" class="modern-table" style="width:100%; border-collapse: collapse; text-align: right; direction: rtl; font-family: 'Cairo', sans-serif;">
-                <thead>
+        <div style="overflow-x:auto; max-height:400px;">
+            <table id="empTable" class="data-table" style="width:100%; font-size:12px;">
+                <thead style="position:sticky; top:0; background:#eee;">
                     <tr>
-                        <th width="5%">#</th>
-                        <th width="15%">رقم التعريف (NIN)</th>
-                        <th width="15%">اللقب</th>
-                        <th width="15%">الاسم</th>
-                        <th width="12%">تاريخ الميلاد</th>
-                        <th width="23%">الرتبة</th>
-                        <th width="15%">الحالة</th>
+                        <th>#</th>
+                        <th>رقم التعريف</th>
+                        <th>اللقب</th>
+                        <th>الاسم</th>
+                        <th>تاريخ الميلاد</th>
+                        <th>الرتبة</th>
+                        <th>الحالة</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -1314,31 +1280,61 @@ function generateEmployeesTable(data, schoolName) {
     window.currentListContext = data;
 
     Swal.fire({
-        title: '', // العنوان مدمج في الـ HTML
+        title: 'قائمة الموظفين',
         html: tableHtml,
-        width: '95%', // عرض النافذة ليحتوي الجدول براحة
+        width: '900px',
         showConfirmButton: false,
-        showCloseButton: true,
-        background: '#fff',
-        padding: '20px'
+        showCloseButton: true
     });
 }
 
 // عرض تفاصيل موظف من الجدول
+// عرض تفاصيل موظف من الجدول (معدلة لتوجيه غير المؤكدين للتأكيد)
 function showEmployeeDetails(ccp) {
+    // البحث عن الموظف في القائمة المحملة
     const emp = window.currentListContext.find(e => e.ccp == ccp || e.empId == ccp);
-    if(emp) showConfirmedModal(emp); 
+    
+    if (emp) {
+        // تحديث المتغير العام ليتمكن النظام من التعديل عليه إذا لزم الأمر
+        currentEmployeeData = emp;
+
+        // التحقق مما إذا كان مؤكداً أم لا
+        const isConfirmed = (emp.confirmed === true || String(emp.confirmed).toLowerCase() === "true");
+
+        if (isConfirmed) {
+            // إذا كان مؤكداً -> اعرض الاستمارة الخضراء (جاهزة للطباعة)
+            showConfirmedModal(emp);
+        } else {
+            // إذا لم يكن مؤكداً -> اعرض نافذة المراجعة الحمراء (ليتمكن المدير من تأكيده)
+            // نمرر "admin_review" كـ context لتمييز الحالة إذا أردت
+            showReviewModal(emp, "admin_review");
+        }
+    }
 }
 
-// 5. الطباعة المجمعة للاستمارات
+// 5. الطباعة المجمعة للاستمارات (معدلة: تطبع المؤكدين فقط)
 function generateBulkForms(data, schoolName) {
+    // تصفية البيانات: نأخذ فقط الموظفين الذين لديهم confirmed = true
+    const confirmedOnly = data.filter(d => d.confirmed === true || String(d.confirmed).toLowerCase() === "true");
+
+    // إذا لم يوجد أي موظف مؤكد، نوقف العملية ونظهر تنبيهاً
+    if (confirmedOnly.length === 0) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'تنبيه',
+            text: 'لا توجد استمارات مؤكدة للطباعة في هذه المؤسسة.',
+            confirmButtonColor: '#2575fc'
+        });
+    }
+
     const printContainer = document.getElementById("printContainer");
     const originalContent = printContainer.innerHTML; // حفظ الهيكل الأصلي
     
     let bulkContent = '';
     const dateStr = new Date().toLocaleDateString('ar-DZ');
 
-    data.forEach(d => {
+    // نستخدم القائمة المصفاة (confirmedOnly) بدلاً من (data)
+    confirmedOnly.forEach(d => {
         // إنشاء صفحة لكل موظف (Page Break)
         bulkContent += `
         <div class="print-page" style="page-break-after: always; padding-top:20px;">
@@ -1422,9 +1418,3 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
-
-
-
-
-
-
