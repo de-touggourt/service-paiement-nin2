@@ -1262,61 +1262,34 @@ function generateEmployeesTable(data, schoolName) {
     // 3. بناء الهيكل (CSS محسن للأزرار وضغط الجدول)
     const tableHtml = `
         <style>
-            /* تنسيق البطاقات الإحصائية */
             .stat-card { background: #f8f9fa; padding: 5px 10px; border-radius: 6px; border: 1px solid #e9ecef; margin: 0 3px; display: inline-block; font-size: 12px; }
             .stat-num { font-weight: bold; font-size: 13px; margin-right: 3px; }
             
-            /* تنسيق الجدول المضغوط */
             .modern-table { width: 100%; border-collapse: collapse; text-align: right; direction: rtl; font-family: 'Cairo', sans-serif; }
             .modern-table thead th { background: #2575fc; color: white; padding: 8px 5px; font-weight: normal; font-size: 12px; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
-            .modern-table tbody td { padding: 6px 5px; font-size: 11.5px; white-space: nowrap; } /* خلايا مضغوطة */
+            .modern-table tbody td { padding: 6px 5px; font-size: 11.5px; white-space: nowrap; }
             .modern-table tbody tr:hover { background-color: #f1f3f5 !important; }
             .modern-table tbody tr:nth-child(even) { background-color: #fbfbfb; }
 
-            /* تنسيق الأزرار الجديد */
             .custom-btn-group { margin: 10px 0; display: flex; justify-content: center; gap: 8px; }
-            .action-btn {
-                padding: 6px 15px;
-                font-size: 12px;
-                border-radius: 5px;
-                border: none;
-                color: white;
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                font-family: 'Cairo', sans-serif;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                transition: transform 0.1s, box-shadow 0.1s;
-            }
-            .action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
-            .action-btn:active { transform: translateY(0); }
+            .action-btn { padding: 6px 15px; font-size: 12px; border-radius: 5px; border: none; color: white; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: 'Cairo', sans-serif; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: transform 0.1s; }
+            .action-btn:hover { transform: translateY(-1px); }
             
-            /* ألوان الأزرار */
-            .btn-excel { background-color: #28a745; } /* أخضر */
-            .btn-excel:hover { background-color: #218838; }
-            
-            .btn-print { background-color: #343a40; } /* أسود فاتح/رمادي غامق */
-            .btn-print:hover { background-color: #23272b; }
+            .btn-excel { background-color: #28a745; }
+            .btn-print { background-color: #343a40; }
         </style>
 
         <div style="text-align:center; margin-bottom:10px;">
             <h3 style="color:#2575fc; margin-bottom: 8px; font-size: 16px; font-family: 'Cairo', sans-serif;">${schoolName}</h3>
             
             <div style="margin-bottom: 10px;">
-                <div class="stat-card" style="border-right: 3px solid #2575fc;">
-                    إجمالي: <span class="stat-num" style="color: #2575fc;">${total}</span>
-                </div>
-                <div class="stat-card" style="border-right: 3px solid #28a745;">
-                    المؤكد: <span class="stat-num" style="color: #28a745;">${confirmedCount}</span>
-                </div>
-                <div class="stat-card" style="border-right: 3px solid #dc3545;">
-                    غير المؤكد: <span class="stat-num" style="color: #dc3545;">${unconfirmedCount}</span>
-                </div>
+                <div class="stat-card" style="border-right: 3px solid #2575fc;">إجمالي: <span class="stat-num" style="color: #2575fc;">${total}</span></div>
+                <div class="stat-card" style="border-right: 3px solid #28a745;">المؤكد: <span class="stat-num" style="color: #28a745;">${confirmedCount}</span></div>
+                <div class="stat-card" style="border-right: 3px solid #dc3545;">غير المؤكد: <span class="stat-num" style="color: #dc3545;">${unconfirmedCount}</span></div>
             </div>
 
             <div class="custom-btn-group">
-                <button onclick="printCurrentTable()" class="action-btn btn-print">
+                <button onclick="printCurrentTable('${schoolName}')" class="action-btn btn-print">
                     <i class="fas fa-print"></i> طباعة القائمة
                 </button>
                 <button onclick="exportTableToExcel('empTable', '${schoolName}')" class="action-btn btn-excel">
@@ -1348,8 +1321,8 @@ function generateEmployeesTable(data, schoolName) {
     Swal.fire({
         title: '',
         html: tableHtml,
-        width: 'auto', // عرض تلقائي لضغط النافذة
-        maxWidth: '90%', // لا تتجاوز 90% من الشاشة
+        width: 'auto',
+        maxWidth: '90%',
         showConfirmButton: false,
         showCloseButton: true,
         background: '#fff',
@@ -1365,10 +1338,8 @@ function showEmployeeDetails(ccp) {
         const isConfirmed = (emp.confirmed === true || String(emp.confirmed).toLowerCase() === "true");
 
         if (isConfirmed) {
-            // إذا كان مؤكداً -> اعرض الاستمارة الخضراء
             showConfirmedModal(emp);
         } else {
-            // إذا لم يكن مؤكداً -> اعرض نافذة المراجعة الحمراء
             showReviewModal(emp, "admin_review");
         }
     }
@@ -1376,7 +1347,6 @@ function showEmployeeDetails(ccp) {
 
 // 5. الطباعة المجمعة للاستمارات (معدلة: تطبع المؤكدين فقط)
 function generateBulkForms(data, schoolName) {
-    // تصفية البيانات: نأخذ فقط الموظفين الذين لديهم confirmed = true
     const confirmedOnly = data.filter(d => d.confirmed === true || String(d.confirmed).toLowerCase() === "true");
 
     if (confirmedOnly.length === 0) {
@@ -1389,13 +1359,12 @@ function generateBulkForms(data, schoolName) {
     }
 
     const printContainer = document.getElementById("printContainer");
-    const originalContent = printContainer.innerHTML; // حفظ الهيكل الأصلي
+    const originalContent = printContainer.innerHTML;
     
     let bulkContent = '';
     const dateStr = new Date().toLocaleDateString('ar-DZ');
 
     confirmedOnly.forEach(d => {
-        // إنشاء صفحة لكل موظف (Page Break)
         bulkContent += `
         <div class="print-page" style="page-break-after: always; padding-top:20px;">
             <div class="print-official-header">
@@ -1444,20 +1413,94 @@ function generateBulkForms(data, schoolName) {
         `;
     });
 
-    // استبدال محتوى الطباعة
     printContainer.innerHTML = bulkContent;
-    
     window.print();
-
-    // استعادة الهيكل الأصلي بعد الطباعة 
     setTimeout(() => {
         printContainer.innerHTML = originalContent;
     }, 1000);
 }
 
-// 6. وظيفة الطباعة للجدول
-function printCurrentTable() {
+// 6. وظيفة الطباعة للجدول (بالتصميم الرسمي الجديد)
+function printCurrentTable(schoolName) {
+    const data = window.currentListContext;
+    if (!data || data.length === 0) return;
+
+    // الحصول على التواريخ والبيانات
+    const dateObj = new Date();
+    const currentYear = dateObj.getFullYear();
+    const dateStr = dateObj.toLocaleDateString('ar-DZ'); // تاريخ اليوم
+    // نأخذ اسم البلدية من أول موظف في القائمة (افتراضاً أنهم في نفس المنطقة) أو نتركها فارغة
+    const baladiya = (data[0] && data[0].baladiya) ? data[0].baladiya : "................";
+
+    // بناء صفوف الجدول
+    let rowsHtml = '';
+    data.forEach((emp, index) => {
+        rowsHtml += `
+            <tr>
+                <td style="text-align:center;">${index + 1}</td>
+                <td style="text-align:center;">${emp.nin || ''}</td>
+                <td>${emp.fmn}</td>
+                <td>${emp.frn}</td>
+                <td style="text-align:center;">${fmtDate(emp.diz)}</td>
+                <td>${getJob(emp.gr)}</td>
+                <td></td> </tr>
+        `;
+    });
+
+    // تصميم الصفحة (A4)
+    const printContent = `
+        <div class="print-page" style="direction: rtl; font-family: 'Amiri', 'Traditional Arabic', serif; color: #000; padding: 20px;">
+            
+            <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 20px;">
+                <p style="margin: 0;">الجمهورية الجزائرية الديمقراطية الشعبية</p>
+                <p style="margin: 5px 0;">وزارة التربية الوطنية</p>
+            </div>
+
+            <div style="text-align: right; font-size: 14px; font-weight: bold; margin-bottom: 10px;">
+                <p style="margin: 2px 0;">مديرية التربية لولاية توقرت</p>
+                <p style="margin: 2px 0;">المؤسسة: ${schoolName}</p>
+                <p style="margin: 2px 0;">الرقم: ....... / ${currentYear}</p>
+            </div>
+
+            <h2 style="text-align: center; text-decoration: underline; margin: 30px 0; font-size: 22px;">قائمة موظفي المؤسسة</h2>
+
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #000; padding: 5px; width: 5%;">الرقم</th>
+                        <th style="border: 1px solid #000; padding: 5px; width: 18%;">رقم التعريف الوطني</th>
+                        <th style="border: 1px solid #000; padding: 5px; width: 15%;">اللقب</th>
+                        <th style="border: 1px solid #000; padding: 5px; width: 15%;">الاسم</th>
+                        <th style="border: 1px solid #000; padding: 5px; width: 12%;">تاريخ الميلاد</th>
+                        <th style="border: 1px solid #000; padding: 5px; width: 25%;">الرتبة</th>
+                        <th style="border: 1px solid #000; padding: 5px; width: 10%;">الملاحظة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rowsHtml}
+                </tbody>
+            </table>
+
+            <div style="margin-top: 40px; display: flex; justify-content: flex-end; padding-left: 50px;">
+                <div style="text-align: left; font-weight: bold; font-size: 14px;">
+                    <p style="margin-bottom: 10px;">حرر بـ : ${baladiya} &nbsp;&nbsp;&nbsp; في: ${dateStr}</p>
+                    <p>المدير(ة):</p>
+                </div>
+            </div>
+
+        </div>
+    `;
+
+    // عملية الطباعة
+    const printContainer = document.getElementById("printContainer");
+    const originalContent = printContainer.innerHTML;
+    
+    printContainer.innerHTML = printContent;
     window.print();
+
+    setTimeout(() => {
+        printContainer.innerHTML = originalContent;
+    }, 1000);
 }
 
 // 7. تصدير إلى Excel
@@ -1478,4 +1521,3 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
-
