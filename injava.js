@@ -1074,36 +1074,94 @@ function updateWorkPlace() {
 // ============================================================
 
 // 1. فتح نافذة الفلاتر (Modal)
+// ============================================================
+// +++ وظائف الإدارة الجديدة (Admin Functions) - المعدلة للحماية +++
+// ============================================================
+
+// 1. فتح نافذة التحقق من المدير (الخطوة الأولى)
 function openAdminModal() {
+  Swal.fire({
+    title: 'دخول المدير / المسؤول',
+    text: 'يرجى إدخال رقم الحساب البريدي (CCP) للتحقق من هويتك وتحديد مؤسستك',
+    input: 'text',
+    inputAttributes: {
+      autocapitalize: 'off',
+      placeholder: 'أدخل رقم CCP بدون المفتاح'
+    },
+    showCancelButton: true,
+    confirmButtonText: 'تحقق ودخول',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#2575fc',
+    cancelButtonColor: '#6c757d',
+    showLoaderOnConfirm: true,
+    preConfirm: (ccp) => {
+      if (!ccp) {
+        Swal.showValidationMessage('يرجى إدخال رقم الحساب البريدي');
+        return false;
+      }
+      
+      // التحقق من السيرفر
+      return fetch(scriptURL, {
+        method: 'POST',
+        body: new URLSearchParams({ action: 'check_existing', ccp: ccp.trim() })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.result !== 'exists') {
+          throw new Error('هذا الحساب غير مسجل في النظام');
+        }
+        return data.data; // إرجاع بيانات الموظف (المدير)
+      })
+      .catch(error => {
+        Swal.showValidationMessage(`فشل التحقق: ${error}`);
+      });
+    },
+    allowOutsideClick: () => !Swal.isLoading()
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // نجاح التحقق - فتح اللوحة المقفلة ببيانات المدير
+      showRestrictedAdminPanel(result.value);
+    }
+  });
+}
+
+// 2. عرض لوحة الاستخراج (مقفلة على مؤسسة المدير)
+function showRestrictedAdminPanel(empData) {
+  // استخراج البيانات لتثبيتها
+  const schoolName = empData.schoolName || "غير محدد";
+  const daaira = empData.daaira || "";
+  const baladiya = empData.baladiya || "";
+  const level = empData.level || "";
+  const directorName = `${empData.fmn} ${empData.frn}`;
+
+  // تصميم النافذة مع حقول للقراءة فقط (Disabled/Readonly)
   const popupHtml = `
-    <div style="text-align: right; direction: rtl;">
-      <label style="font-weight:bold; display:block; margin-bottom:5px;">الطور التعليمي:</label>
-      <select id="adminLevel" class="swal2-input" style="margin-bottom:15px; width:100%;" onchange="updateAdminFilters()">
-        <option value="">-- اختر الطور --</option>
-        <option value="ابتدائي">ابتدائي</option>
-        <option value="متوسط">متوسط</option>
-        <option value="ثانوي">ثانوي</option>
-      </select>
+    <div style="text-align: right; direction: rtl; font-family: 'Cairo', sans-serif;">
+      
+      <div style="background: #e3f2fd; color: #0d47a1; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+        <i class="fas fa-user-tie"></i> مرحباً: <strong>${directorName}</strong>
+      </div>
 
-      <label style="font-weight:bold; display:block; margin-bottom:5px;">الدائرة:</label>
-      <select id="adminDaaira" class="swal2-input" style="margin-bottom:15px; width:100%;" onchange="updateAdminBaladiya(); updateAdminSchools();">
-        <option value="">-- اختر الدائرة --</option>
-        <option value="توقرت">توقرت</option>
-        <option value="تماسين">تماسين</option>
-        <option value="المقارين">المقارين</option>
-        <option value="الحجيرة">الحجيرة</option>
-        <option value="الطيبات">الطيبات</option>
-      </select>
+      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#555;">الطور التعليمي:</label>
+      <input type="text" value="${level}" class="swal2-input" style="background:#f9f9f9; color:#777; width:100%; margin-bottom:15px; border:1px solid #ddd;" disabled readonly>
 
-      <label style="font-weight:bold; display:block; margin-bottom:5px;">البلدية:</label>
-      <select id="adminBaladiya" class="swal2-input" style="margin-bottom:15px; width:100%;" onchange="updateAdminSchools()">
-        <option value="">-- اختر البلدية --</option>
-      </select>
+      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#555;">الدائرة:</label>
+      <input type="text" value="${daaira}" class="swal2-input" style="background:#f9f9f9; color:#777; width:100%; margin-bottom:15px; border:1px solid #ddd;" disabled readonly>
 
-      <label style="font-weight:bold; display:block; margin-bottom:5px;">المؤسسة:</label>
-      <select id="adminSchool" class="swal2-input" style="margin-bottom:20px; width:100%;">
-        <option value="">-- اختر المؤسسة --</option>
-      </select>
+      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#555;">البلدية:</label>
+      <input type="text" value="${baladiya}" class="swal2-input" style="background:#f9f9f9; color:#777; width:100%; margin-bottom:15px; border:1px solid #ddd;" disabled readonly>
+
+      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#2575fc;">المؤسسة (مثبتة):</label>
+      <input type="text" id="lockedSchoolName" value="${schoolName}" class="swal2-input" style="background:#e8f0fe; color:#333; font-weight:bold; width:100%; margin-bottom:20px; border:1px solid #2575fc;" disabled readonly>
+      
+      <div style="font-size:12px; color:red; margin-top:-10px; margin-bottom:20px;">
+        * لا يمكن تغيير المؤسسة لضمان الخصوصية.
+      </div>
     </div>
   `;
 
@@ -1114,30 +1172,21 @@ function openAdminModal() {
     showDenyButton: true,
     confirmButtonText: '<i class="fas fa-print"></i> استمارات الموظفين',
     denyButtonText: '<i class="fas fa-list"></i> قوائم الموظفين',
-    cancelButtonText: 'إغلاق',
+    cancelButtonText: 'خروج',
     confirmButtonColor: '#2575fc',
     denyButtonColor: '#28a745',
     cancelButtonColor: '#d33',
-    width: '600px',
-    didOpen: () => {
-        // تهيئة الفلاتر عند الفتح
-    },
+    width: '500px',
     preConfirm: () => {
-        const school = document.getElementById('adminSchool').value;
-        if (!school) { Swal.showValidationMessage('يرجى اختيار المؤسسة أولاً'); return false; }
-        return { action: 'forms', school: school };
+        return { action: 'forms', school: schoolName };
     },
     preDeny: () => {
-        const school = document.getElementById('adminSchool').value;
-        if (!school) { Swal.showValidationMessage('يرجى اختيار المؤسسة أولاً'); return false; }
-        return { action: 'list', school: school };
+        return { action: 'list', school: schoolName };
     }
   }).then((result) => {
     if (result.isConfirmed) {
-      // طباعة الاستمارات المجمعة
       fetchAndHandleData(result.value.school, 'forms');
     } else if (result.isDenied) {
-      // عرض القائمة
       fetchAndHandleData(result.value.school, 'list');
     }
   });
@@ -1577,3 +1626,4 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
+
