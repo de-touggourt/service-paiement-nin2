@@ -1420,7 +1420,7 @@ function generateBulkForms(data, schoolName) {
     }, 1000);
 }
 
-// 6. وظيفة الطباعة للجدول (بالتصميم الرسمي الجديد)
+// 6. وظيفة الطباعة للجدول (بالتصميم الرسمي الجديد المعدل)
 function printCurrentTable(schoolName) {
     const data = window.currentListContext;
     if (!data || data.length === 0) return;
@@ -1429,7 +1429,6 @@ function printCurrentTable(schoolName) {
     const dateObj = new Date();
     const currentYear = dateObj.getFullYear();
     const dateStr = dateObj.toLocaleDateString('ar-DZ'); // تاريخ اليوم
-    // نأخذ اسم البلدية من أول موظف في القائمة (افتراضاً أنهم في نفس المنطقة) أو نتركها فارغة
     const baladiya = (data[0] && data[0].baladiya) ? data[0].baladiya : "................";
 
     // بناء صفوف الجدول
@@ -1447,9 +1446,36 @@ function printCurrentTable(schoolName) {
         `;
     });
 
-    // تصميم الصفحة (A4)
+    // تصميم الصفحة (A4 Landscape)
     const printContent = `
-        <div class="print-page" style="direction: rtl; font-family: 'Amiri', 'Traditional Arabic', serif; color: #000; padding: 20px;">
+        <style>
+            @page { 
+                size: A4 landscape; /* اتجاه أفقي لتوفير مساحة */
+                margin: 10mm; /* هامش 1 سم */
+            }
+            body { 
+                font-family: 'Amiri', 'Traditional Arabic', serif; 
+                direction: rtl; 
+                -webkit-print-color-adjust: exact; 
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse; /* حدود متلاصقة */
+            }
+            th, td {
+                border: 1px solid #000; /* حدود سوداء واضحة */
+                padding: 4px;
+                white-space: nowrap; /* منع الكتابة في سطرين */
+                font-size: 12px;
+            }
+            th {
+                background-color: #f0f0f0;
+                font-weight: bold;
+                text-align: center;
+            }
+        </style>
+
+        <div class="print-page">
             
             <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 20px;">
                 <p style="margin: 0;">الجمهورية الجزائرية الديمقراطية الشعبية</p>
@@ -1462,18 +1488,18 @@ function printCurrentTable(schoolName) {
                 <p style="margin: 2px 0;">الرقم: ....... / ${currentYear}</p>
             </div>
 
-            <h2 style="text-align: center; text-decoration: underline; margin: 30px 0; font-size: 22px;">قائمة موظفي المؤسسة</h2>
+            <h2 style="text-align: center; text-decoration: underline; margin: 20px 0; font-size: 20px;">قائمة موظفي المؤسسة</h2>
 
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 30px;">
+            <table>
                 <thead>
-                    <tr style="background-color: #f0f0f0;">
-                        <th style="border: 1px solid #000; padding: 5px; width: 5%;">الرقم</th>
-                        <th style="border: 1px solid #000; padding: 5px; width: 18%;">رقم التعريف الوطني</th>
-                        <th style="border: 1px solid #000; padding: 5px; width: 15%;">اللقب</th>
-                        <th style="border: 1px solid #000; padding: 5px; width: 15%;">الاسم</th>
-                        <th style="border: 1px solid #000; padding: 5px; width: 12%;">تاريخ الميلاد</th>
-                        <th style="border: 1px solid #000; padding: 5px; width: 25%;">الرتبة</th>
-                        <th style="border: 1px solid #000; padding: 5px; width: 10%;">الملاحظة</th>
+                    <tr>
+                        <th style="width: 5%;">الرقم</th>
+                        <th style="width: 15%;">رقم التعريف الوطني</th>
+                        <th style="width: 15%;">اللقب</th>
+                        <th style="width: 15%;">الاسم</th>
+                        <th style="width: 10%;">تاريخ الميلاد</th>
+                        <th style="width: 25%;">الرتبة</th>
+                        <th style="width: 15%;">الملاحظة</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1481,7 +1507,7 @@ function printCurrentTable(schoolName) {
                 </tbody>
             </table>
 
-            <div style="margin-top: 40px; display: flex; justify-content: flex-end; padding-left: 50px;">
+            <div style="margin-top: 30px; display: flex; justify-content: flex-end; padding-left: 50px;">
                 <div style="text-align: left; font-weight: bold; font-size: 14px;">
                     <p style="margin-bottom: 10px;">حرر بـ : ${baladiya} &nbsp;&nbsp;&nbsp; في: ${dateStr}</p>
                     <p>المدير(ة):</p>
