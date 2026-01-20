@@ -1078,105 +1078,164 @@ function updateWorkPlace() {
 // +++ وظائف الإدارة الجديدة (Admin Functions) - المعدلة للحماية +++
 // ============================================================
 
-// 1. فتح نافذة التحقق من المدير (الخطوة الأولى)
+// ============================================================
+// +++ وظائف الإدارة الجديدة (Admin Functions) - المحسنة +++
+// ============================================================
+
+// 1. فتح نافذة التحقق من المدير (تصميم محسن + قيود الإدخال)
 function openAdminModal() {
+  const popupHtml = `
+    <div style="font-family: 'Cairo', sans-serif; direction: rtl;">
+      <div style="margin-bottom: 20px; color: #555;">
+        <i class="fas fa-user-shield" style="font-size: 50px; color: #2575fc; margin-bottom: 10px;"></i>
+        <h3 style="margin: 0; font-size: 18px; font-weight: bold;">بوابة استخراج الوثائق</h3>
+        <p style="font-size: 13px; color: #777; margin-top: 5px;">يرجى إثبات الهوية للوصول إلى بيانات المؤسسة</p>
+      </div>
+      
+      <div style="position: relative; margin-bottom: 10px;">
+        <input type="text" id="adminCcpInput" 
+          maxlength="10" 
+          placeholder="رقم الحساب البريدي (بدون المفتاح)" 
+          class="swal2-input" 
+          style="text-align: center; font-weight: bold; font-size: 18px; letter-spacing: 1px; width: 80%; margin: 0 auto; display: block;"
+          oninput="this.value = this.value.replace(/[^0-9]/g, '')"> </div>
+      
+      <div style="font-size: 12px; color: #888;">
+        * يقبل الأرقام فقط (Max 10)
+      </div>
+    </div>
+  `;
+
   Swal.fire({
-    title: 'دخول المدير / المسؤول',
-    text: 'يرجى إدخال رقم الحساب البريدي (CCP) للتحقق من هويتك وتحديد مؤسستك',
-    input: 'text',
-    inputAttributes: {
-      autocapitalize: 'off',
-      placeholder: 'أدخل رقم CCP بدون المفتاح'
-    },
+    html: popupHtml,
     showCancelButton: true,
     confirmButtonText: 'تحقق ودخول',
     cancelButtonText: 'إلغاء',
     confirmButtonColor: '#2575fc',
     cancelButtonColor: '#6c757d',
     showLoaderOnConfirm: true,
-    preConfirm: (ccp) => {
-      if (!ccp) {
+    width: '450px', // حجم مناسب ومنسق
+    didOpen: () => {
+        // التركيز المباشر على الحقل عند الفتح
+        const input = document.getElementById('adminCcpInput');
+        if(input) input.focus();
+        
+        // تفعيل زر الدخول عند ضغط Enter
+        input.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                Swal.clickConfirm();
+            }
+        });
+    },
+    preConfirm: () => {
+      const rawCcp = document.getElementById('adminCcpInput').value;
+      
+      if (!rawCcp) {
         Swal.showValidationMessage('يرجى إدخال رقم الحساب البريدي');
         return false;
       }
       
+      // معالجة الأصفار: حذف الأصفار من البداية لضمان المطابقة
+      const cleanCcp = rawCcp.replace(/^0+/, ''); 
+
       // التحقق من السيرفر
       return fetch(scriptURL, {
         method: 'POST',
-        body: new URLSearchParams({ action: 'check_existing', ccp: ccp.trim() })
+        body: new URLSearchParams({ action: 'check_existing', ccp: cleanCcp })
       })
       .then(response => {
-        if (!response.ok) {
-          throw new Error(response.statusText);
-        }
+        if (!response.ok) throw new Error(response.statusText);
         return response.json();
       })
       .then(data => {
         if (data.result !== 'exists') {
-          throw new Error('هذا الحساب غير مسجل في النظام');
+          throw new Error('هذا الحساب غير مسجل في النظام أو لا تملك صلاحية');
         }
-        return data.data; // إرجاع بيانات الموظف (المدير)
+        return data.data; // إرجاع بيانات المدير
       })
       .catch(error => {
-        Swal.showValidationMessage(`فشل التحقق: ${error}`);
+        Swal.showValidationMessage(`${error}`);
       });
     },
     allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
     if (result.isConfirmed) {
-      // نجاح التحقق - فتح اللوحة المقفلة ببيانات المدير
+      // نجاح التحقق
       showRestrictedAdminPanel(result.value);
     }
   });
 }
 
-// 2. عرض لوحة الاستخراج (مقفلة على مؤسسة المدير)
+// 2. عرض لوحة الاستخراج (مقفلة ومنسقة)
 function showRestrictedAdminPanel(empData) {
-  // استخراج البيانات لتثبيتها
   const schoolName = empData.schoolName || "غير محدد";
   const daaira = empData.daaira || "";
   const baladiya = empData.baladiya || "";
   const level = empData.level || "";
   const directorName = `${empData.fmn} ${empData.frn}`;
 
-  // تصميم النافذة مع حقول للقراءة فقط (Disabled/Readonly)
+  // تنسيق CSS للحقول المقفلة
+  const lockedStyle = `
+    background: #f1f3f4; 
+    border: 1px solid #ced4da; 
+    color: #495057; 
+    font-weight: 600; 
+    cursor: not-allowed;
+    text-align: center;
+    font-size: 14px;
+    height: 40px;
+    margin-bottom: 12px;
+  `;
+
   const popupHtml = `
-    <div style="text-align: right; direction: rtl; font-family: 'Cairo', sans-serif;">
+    <div style="font-family: 'Cairo', sans-serif; direction: rtl; text-align: right;">
       
-      <div style="background: #e3f2fd; color: #0d47a1; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
-        <i class="fas fa-user-tie"></i> مرحباً: <strong>${directorName}</strong>
+      <div style="background: linear-gradient(45deg, #2575fc, #6a11cb); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="font-size: 12px; opacity: 0.9;">مرحباً بالسيد(ة) المدير(ة):</div>
+        <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">${directorName}</div>
       </div>
 
-      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#555;">الطور التعليمي:</label>
-      <input type="text" value="${level}" class="swal2-input" style="background:#f9f9f9; color:#777; width:100%; margin-bottom:15px; border:1px solid #ddd;" disabled readonly>
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight:bold; color:#555;">الطور:</label>
+            <input type="text" value="${level}" class="swal2-input" style="${lockedStyle}; width: 100%;" disabled readonly>
+        </div>
+        <div style="flex: 1;">
+            <label style="font-size: 12px; font-weight:bold; color:#555;">الدائرة:</label>
+            <input type="text" value="${daaira}" class="swal2-input" style="${lockedStyle}; width: 100%;" disabled readonly>
+        </div>
+      </div>
 
-      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#555;">الدائرة:</label>
-      <input type="text" value="${daaira}" class="swal2-input" style="background:#f9f9f9; color:#777; width:100%; margin-bottom:15px; border:1px solid #ddd;" disabled readonly>
+      <label style="font-size: 12px; font-weight:bold; color:#555;">البلدية:</label>
+      <input type="text" value="${baladiya}" class="swal2-input" style="${lockedStyle}; width: 100%;" disabled readonly>
 
-      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#555;">البلدية:</label>
-      <input type="text" value="${baladiya}" class="swal2-input" style="background:#f9f9f9; color:#777; width:100%; margin-bottom:15px; border:1px solid #ddd;" disabled readonly>
-
-      <label style="font-weight:bold; display:block; margin-bottom:5px; color:#2575fc;">المؤسسة (مثبتة):</label>
-      <input type="text" id="lockedSchoolName" value="${schoolName}" class="swal2-input" style="background:#e8f0fe; color:#333; font-weight:bold; width:100%; margin-bottom:20px; border:1px solid #2575fc;" disabled readonly>
+      <label style="font-size: 12px; font-weight:bold; color:#2575fc;">المؤسسة (مثبتة):</label>
+      <div style="position: relative;">
+        <input type="text" value="${schoolName}" class="swal2-input" 
+               style="${lockedStyle}; width: 100%; background: #e8f0fe; border-color: #2575fc; color: #1a73e8;" 
+               disabled readonly>
+        <i class="fas fa-lock" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #2575fc;"></i>
+      </div>
       
-      <div style="font-size:12px; color:red; margin-top:-10px; margin-bottom:20px;">
-        * لا يمكن تغيير المؤسسة لضمان الخصوصية.
+      <div style="text-align: center; margin-top: 10px; font-size: 11px; color: #dc3545;">
+        <i class="fas fa-info-circle"></i> لا يمكن تغيير المؤسسة لضمان سرية البيانات.
       </div>
     </div>
   `;
 
   Swal.fire({
-    title: 'لوحة استخراج القوائم',
+    title: '', // العنوان مدمج في التصميم
     html: popupHtml,
     showCancelButton: true,
     showDenyButton: true,
-    confirmButtonText: '<i class="fas fa-print"></i> استمارات الموظفين',
-    denyButtonText: '<i class="fas fa-list"></i> قوائم الموظفين',
+    confirmButtonText: '<i class="fas fa-print"></i> طباعة الاستمارات',
+    denyButtonText: '<i class="fas fa-list"></i> عرض القائمة',
     cancelButtonText: 'خروج',
-    confirmButtonColor: '#2575fc',
-    denyButtonColor: '#28a745',
+    confirmButtonColor: '#333',     // لون زر الاستمارات (داكن/رسمي)
+    denyButtonColor: '#28a745',     // لون زر القائمة (أخضر)
     cancelButtonColor: '#d33',
     width: '500px',
+    padding: '20px',
     preConfirm: () => {
         return { action: 'forms', school: schoolName };
     },
@@ -1626,4 +1685,5 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
+
 
