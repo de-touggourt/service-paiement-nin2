@@ -1082,7 +1082,7 @@ function updateWorkPlace() {
 // +++ وظائف الإدارة الجديدة (Admin Functions) - المحسنة +++
 // ============================================================
 
-// 1. فتح نافذة التحقق من المدير (تصميم محسن + قيود الإدخال)
+// 1. فتح نافذة التحقق من المدير (مع توحيد تنسيق 10 أرقام)
 function openAdminModal() {
   const popupHtml = `
     <div style="font-family: 'Cairo', sans-serif; direction: rtl;">
@@ -1095,13 +1095,14 @@ function openAdminModal() {
       <div style="position: relative; margin-bottom: 10px;">
         <input type="text" id="adminCcpInput" 
           maxlength="10" 
-          placeholder="رقم الحساب البريدي (بدون المفتاح)" 
+          placeholder="رقم الحساب (مثال: 0000012345)" 
           class="swal2-input" 
-          style="text-align: center; font-weight: bold; font-size: 18px; letter-spacing: 1px; width: 80%; margin: 0 auto; display: block;"
-          oninput="this.value = this.value.replace(/[^0-9]/g, '')"> </div>
+          style="text-align: center; font-weight: bold; font-size: 18px; letter-spacing: 2px; width: 80%; margin: 0 auto; display: block;"
+          oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+      </div>
       
       <div style="font-size: 12px; color: #888;">
-        * يقبل الأرقام فقط (Max 10)
+        * النظام سيقوم بضبط الأصفار تلقائياً لتطابق قاعدة البيانات
       </div>
     </div>
   `;
@@ -1114,13 +1115,11 @@ function openAdminModal() {
     confirmButtonColor: '#2575fc',
     cancelButtonColor: '#6c757d',
     showLoaderOnConfirm: true,
-    width: '450px', // حجم مناسب ومنسق
+    width: '450px',
     didOpen: () => {
-        // التركيز المباشر على الحقل عند الفتح
         const input = document.getElementById('adminCcpInput');
         if(input) input.focus();
         
-        // تفعيل زر الدخول عند ضغط Enter
         input.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 Swal.clickConfirm();
@@ -1135,13 +1134,21 @@ function openAdminModal() {
         return false;
       }
       
-      // معالجة الأصفار: حذف الأصفار من البداية لضمان المطابقة
-      const cleanCcp = rawCcp.replace(/^0+/, ''); 
+      // === التعديل هنا: توحيد التنسيق إلى 10 أرقام ===
+      
+      // 1. تنظيف الرقم من أي رموز وحذف الأصفار من البداية
+      let cleanStr = rawCcp.replace(/\D/g, '').replace(/^0+/, '');
+      
+      // 2. تعبئة الرقم بأصفار من اليسار ليصبح طوله 10 أرقام
+      const finalCcpToCheck = cleanStr.padStart(10, '0');
 
+      // مثال: أدخل 123 -> يرسل 0000000123
+      // مثال: أدخل 00123 -> يرسل 0000000123
+      
       // التحقق من السيرفر
       return fetch(scriptURL, {
         method: 'POST',
-        body: new URLSearchParams({ action: 'check_existing', ccp: cleanCcp })
+        body: new URLSearchParams({ action: 'check_existing', ccp: finalCcpToCheck })
       })
       .then(response => {
         if (!response.ok) throw new Error(response.statusText);
@@ -1149,7 +1156,7 @@ function openAdminModal() {
       })
       .then(data => {
         if (data.result !== 'exists') {
-          throw new Error('هذا الحساب غير مسجل في النظام أو لا تملك صلاحية');
+          throw new Error('هذا الحساب غير مسجل كمسؤول أو البيانات غير صحيحة');
         }
         return data.data; // إرجاع بيانات المدير
       })
@@ -1160,7 +1167,6 @@ function openAdminModal() {
     allowOutsideClick: () => !Swal.isLoading()
   }).then((result) => {
     if (result.isConfirmed) {
-      // نجاح التحقق
       showRestrictedAdminPanel(result.value);
     }
   });
@@ -1685,5 +1691,6 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
+
 
 
