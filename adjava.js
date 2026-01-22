@@ -135,7 +135,7 @@ const SECURE_DASHBOARD_HTML = `
 `;
 
 // --- المتغيرات العامة ---
-const scriptURL = "https://script.google.com/macros/s/AKfycbypaQgVu16EFOMnxN7fzdFIFtiLiLjPX0xcwxEUjG5gsoeZ8yQJ5OL5IwIlJMgsrAJxwA/exec"; 
+const scriptURL = "https://script.google.com/macros/s/AKfycbyHtovS-eMR195CzvSYDOSNEScJtQbnvIRc7tw-YfsyDMCvB7atQwXJzbzwSRis3A-z/exec"; 
 
 // متغيرات البيانات والصفحات
 let allData = [];
@@ -2265,6 +2265,7 @@ window.updateDashMaps = function(source) { // source: 'level' | 'daaira' | 'bala
         fSchool.add(new Option(sch.name, sch.name));
     });
 };
+
 
 
 
