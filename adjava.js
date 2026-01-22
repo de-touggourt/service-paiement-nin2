@@ -1,3 +1,4 @@
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -15,7 +16,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- الكود المخفي (HTML) ---
 const SECURE_DASHBOARD_HTML = `
   <div class="dashboard-container" style="display:block;">
     <div class="header-area">
@@ -46,44 +46,63 @@ const SECURE_DASHBOARD_HTML = `
       </div>
     </div>
 
-    <div class="controls-bar">
-      <div style="position:relative; flex-grow:1;">
+    <div class="controls-bar" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px;">
+      
+       <div style="position:relative; flex-grow:1;">
         <i class="fas fa-search" style="position:absolute; top:50%; right:15px; transform:translateY(-50%); color:#adb5bd;"></i>
         <input type="text" id="searchInput" class="search-input" style="padding-right:40px;" placeholder="بحث سريع..." onkeyup="window.applyFilters()">
       </div>
 
-      <select id="statusFilter" class="filter-select" onchange="window.applyFilters()">
-        <option value="all">عرض الجميع</option>
-        <option value="confirmed">✅ المؤكدة فقط</option>
-        <option value="pending">⏳ الغير مؤكدة فقط</option>
+      <select id="statusFilter" class="filter-select" onchange="window.applyFilters()" style="min-width:150px;">
+        <option value="all">عرض الكل</option>
+        <option value="confirmed">✅ المؤكدة</option>
+        <option value="pending">⏳ الغير مؤكدة</option>
       </select>
 
-    <button class="btn btn-add" onclick="window.openDirectRegister()">
-    تسجيل جديد <i class="fas fa-plus"></i>
-    </button>
-
-    <button class="btn btn-refresh" onclick="window.loadData()">
-        تحديث <i class="fas fa-sync-alt"></i>
-      </button>
-
-    <button class="btn btn-firebase" onclick="window.openFirebaseModal()">
-      إضافة موظف <i class="fas fa-database"></i>
-      </button>
-      
-      <button class="btn btn-excel" onclick="window.downloadExcel()">
-        تحميل Excel <i class="fas fa-file-excel"></i>
-      </button>
-
-    <button class="btn btn-pending-list" style="background-color:#6f42c1; color:white;" onclick="window.openPendingListModal()">
-      قائمة الغير مؤكدة <i class="fas fa-clipboard-list"></i>
-    </button>
-    
-    <button class="btn" style="background-color:#FF00AA; color:white;" onclick="window.checkNonRegistered()">
-      تقرير التسجيل <i class="fas fa-clipboard-list"></i>
-    </button>
-
+      <button class="btn btn-add" onclick="window.openDirectRegister()">تسجيل جديد<i class="fas fa-plus"></i></button>
+      <button class="btn btn-refresh" onclick="window.loadData()">تحديث <i class="fas fa-sync-alt"></i></button>
+      <button class="btn btn-firebase" onclick="window.openFirebaseModal()">إضافة موظف<i class="fas fa-database"></i></button>
+      <button class="btn btn-excel" onclick="window.downloadExcel()">Excel تحميل<i class="fas fa-file-excel"></i></button>
+      <button class="btn btn-pending-list" style="background-color:#6f42c1; color:white;" onclick="window.openPendingListModal()">قائمة الغير مؤكدة<i class="fas fa-clipboard-list"></i></button>
+      <button class="btn" style="background-color:#FF00AA; color:white;" onclick="window.checkNonRegistered()">تقرير التسجيل<i class="fas fa-clipboard-list"></i></button>
+      <button class="btn" style="background-color:#0d6efd; color:white;" onclick="window.openBatchPrintModal()">طباعة الاستمارات<i class="fas fa-print"></i></button>
     </div>
 
+    <div style="background-color:#f1f3f5; padding:12px; border-radius:8px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:15px; border:1px solid #dee2e6;">
+      <div style="font-weight:bold; color:#495057; font-size:14px; margin-left:10px;">
+        <i class="fas fa-map-marker-alt" style="color:#d63384;"></i> تصفية حسب:
+      </div>
+
+      <select id="filter_level" class="filter-select" style="flex:1; min-width:130px;" onchange="window.updateDashMaps('level'); window.applyFilters()">
+        <option value="">-- الطور --</option>
+        <option value="ابتدائي">ابتدائي</option>
+        <option value="متوسط">متوسط</option>
+        <option value="ثانوي">ثانوي</option>
+        <option value="مديرية التربية">مديرية التربية</option>
+      </select>
+
+      <select id="filter_daaira" class="filter-select" style="flex:1; min-width:130px;" onchange="window.updateDashMaps('daaira'); window.applyFilters()">
+        <option value="">-- الدائرة --</option>
+        <option value="توقرت">توقرت</option>
+        <option value="تماسين">تماسين</option>
+        <option value="المقارين">المقارين</option>
+        <option value="الحجيرة">الحجيرة</option>
+        <option value="الطيبات">الطيبات</option>
+      </select>
+
+      <select id="filter_baladiya" class="filter-select" style="flex:1; min-width:130px;" onchange="window.updateDashMaps('baladiya'); window.applyFilters()">
+        <option value="">-- البلدية --</option>
+      </select>
+
+      <select id="filter_school" class="filter-select" style="flex:2; min-width:200px;" onchange="window.applyFilters()">
+        <option value="">-- المؤسسة --</option>
+      </select>
+      
+      <button onclick="document.getElementById('filter_level').value=''; document.getElementById('filter_daaira').value=''; window.updateDashMaps('level'); window.applyFilters();" 
+              style="border:none; background:transparent; color:#e63946; font-weight:bold; cursor:pointer;" title="إلغاء الفلاتر">
+         <i class="fas fa-times"></i> مسح
+      </button>
+    </div>
 
     <div class="table-container">
       <div class="table-responsive">
@@ -122,7 +141,7 @@ const scriptURL = "https://script.google.com/macros/s/AKfycbypaQgVu16EFOMnxN7fzd
 let allData = [];
 let filteredData = [];
 let currentPage = 1;
-const rowsPerPage = 10;
+const rowsPerPage = 8;
 let nonRegisteredData = []; 
 
 // ==========================================
@@ -148,15 +167,15 @@ const primarySchoolsByBaladiya = {
   "النزلة": [{ name: "إبتدائية بن دلالي علي - النزلة" }, { name: "إبتدائية قادري أحمد سيدي ماضي - النزلة" }, { name: "إبتدائية بن عمر النوي - النزلة" }, { name: "إبتدائية بن طرية لمنور - النزلة" }, { name: "إبتدائية بوليفة محمد عمران - النزلة" }, { name: "إبتدائية تماسيني عبد الرحمن - النزلة" }, { name: "إبتدائية كدة بشير - النزلة" }, { name: "إبتدائية حركات العايش - النزلة" }, { name: "إبتدائية المجاهد طرية مخلوف - النزلة" }, { name: "إبتدائية المجاهد قمو محمد - النزلة" }, { name: "إبتدائية تمرني موسى - النزلة" }, { name: "إبتدائية المجاهد سلامي محمد - النزلة" }, { name: "إبتدائية نقودي محمد - النزلة" }, { name: "إبتدائية المجاهد العيفاوي التجاني - النزلة" }, { name: "إبتدائية المجاهد عقال عبد الحميد - النزلة" }, { name: "إبتدائية المجاهد عشاب محمد العيد - النزلة" }, { name: "إبتدائية المجاهد فرحي بحري - النزلة" }, { name: "إبتدائية الشيخ بوعمامة - النزلة" }, { name: "إبتدائية رحماني محمد بن محمد - النزلة" }, { name: "إبتدائية المجاهد كراش الأخضر - النزلة" }, { name: "إبتدائية المجاهد بن حميدة علي - النزلة" }, { name: "إبتدائية بن هدية جاب الله ( المستقبل2) - النزلة" }, { name: "إبتدائية المجاهد مشري غزال - النزلة" }, { name: "إبتدائية بن عاشور السبتي - النزلة" }, { name: "إبتدائية علوي حمزة - النزلة" }, { name: "إبتدائية المجاهد قمو محمود - النزلة" }],
   "بلدة عمر": [{ name: "إبتدائية محمد البشير الإبراهيمي - بلدة اعمر" }, { name: "إبتدائية دحماني عبد الرحمان قوق - بلدة اعمر" }, { name: "إبتدائية بديار محمد - بلدة اعمر" }, { name: "إبتدائية المجاهد قادري موسى - بلدة اعمر" }, { name: "إبتدائية المجاهد الاخضري احمد - بلدة اعمر" }, { name: "إبتدائية المجاهد تمرني عمار(حي النهضة) - بلدة اعمر" }, { name: "إبتدائية المجاهد زروقي علي - بلدة اعمر" }, { name: "إبتدائية المجاهد حاجي عمر - بلدة اعمر" }, { name: "إبتدائية الشهيد مصطفى بن بولعيد قوق - بلدة اعمر" }, { name: "إبتدائية المجاهد شاشة محمد الصغير - بلدة اعمر" }],
   "تبسبست": [{ name: "إبتدائية محمد عشبي - تبسبست" }, { name: "إبتدائية زنو عبد الحفيظ - تبسبست" }, { name: "إبتدائية جواد عمر (تبسبست الجنوبية ) - تبسبست" }, { name: "إبتدائية بن علي الاخضر (بني يسود القديمة) - تبسبست" }, { name: "إبتدائية جيلاني كينة - تبسبست" }, { name: "إبتدائية التجاني نصيري - تبسبست" }, { name: "إبتدائية بن دومة محمد الطاهر - تبسبست" }, { name: "إبتدائية جلابية عبد القادر - تبسبست" }, { name: "إبتدائية المجاهد أحمد شاوش - تبسبست" }, { name: "إبتدائية حي الصومام - تبسبست" }, { name: "إبتدائية المجاهد بوغرارة محمد الصالح - تبسبست" }, { name: "إبتدائية الفتح الجديدة (جرو بحري) - تبسبست" }, { name: "إبتدائية المجاهد العياط سعد - تبسبست" }, { name: "إبتدائية أول نوفمبر 1954 - تبسبست" }, { name: "إبتدائية المجاهد رمون جلول حي فرجمون - تبسبست" }],
-  "توقرت": [{ name: "مديرية التربية" },{ name: "إبتدائية بن خلدون - تقرت" }, { name: "إبتدائية الخنساء - تقرت" }, { name: "إبتدائية الشيخ الطاهر العبيدي - تقرت" }, { name: "إبتدائية عظامو محمد البحري - تقرت" }, { name: "إبتدائية الطالب بابا - تقرت" }, { name: "إبتدائية الإمام الشافعي - تقرت" }, { name: "إبتدائية الامام مالك - تقرت" }, { name: "إبتدائية عبيدلي أحمد - تقرت" }, { name: "إبتدائية عيادي علي - تقرت" }, { name: "إبتدائية ناصر بشير - تقرت" }, { name: "إبتدائية المجاهد موهوبي سليمان - تقرت" }, { name: "إبتدائية المجاهد احمد بورنان - تقرت" }, { name: "إبتدائية بن الصديق عبد الهادي (الرمال 1) - تقرت" }, { name: "إبتدائية الشهيد زابي عبد العالي - تقرت" }, { name: "إبتدائية الأمير عبد القادر الجديدة - تقرت" }, { name: "إبتدائية ميعادي محمد فخر الدين - تقرت" }, { name: "إبتدائية تاتاي محمد الصادق (الرمال 02) - تقرت" }, { name: "إبتدائية المجاهد كافي عبد الرحيم - تقرت" }, { name: "إبتدائية المجاهد عظامو محمد - تقرت" }, { name: "إبتدائية بولعراس ابراهيم - تقرت" }, { name: "إبتدائية حي النضال مجمع مدرسي حي 1190 مسكن - تقرت" }, { name: "إبتدائية عمان يوسف - تقرت" }, { name: "إبتدائية دباخ أحمد المستقبل الجنوبي 7 - تقرت" }, { name: "إبتدائية بالعيد مشري المستقبل الشمالي - تقرت" }, { name: "إبتدائية دباغ عمر المستقبل الجنوبي 09 - تقرت" }, { name: "إبتدائية تاتاي عبد القادر - تقرت" }, { name: "إبتدائية الشهيد بالطاهر علي المستقبل الشمالي - تقرت" }, { name: "إبتدائية المجاهد قادري علال حي 700 مسكن - تقرت" }],
+  "توقرت": [{ name: "إبتدائية بن خلدون - تقرت" }, { name: "إبتدائية الخنساء - تقرت" }, { name: "إبتدائية الشيخ الطاهر العبيدي - تقرت" }, { name: "إبتدائية عظامو محمد البحري - تقرت" }, { name: "إبتدائية الطالب بابا - تقرت" }, { name: "إبتدائية الإمام الشافعي - تقرت" }, { name: "إبتدائية الامام مالك - تقرت" }, { name: "إبتدائية عبيدلي أحمد - تقرت" }, { name: "إبتدائية عيادي علي - تقرت" }, { name: "إبتدائية ناصر بشير - تقرت" }, { name: "إبتدائية المجاهد موهوبي سليمان - تقرت" }, { name: "إبتدائية المجاهد احمد بورنان - تقرت" }, { name: "إبتدائية بن الصديق عبد الهادي (الرمال 1) - تقرت" }, { name: "إبتدائية الشهيد زابي عبد العالي - تقرت" }, { name: "إبتدائية الأمير عبد القادر الجديدة - تقرت" }, { name: "إبتدائية ميعادي محمد فخر الدين - تقرت" }, { name: "إبتدائية تاتاي محمد الصادق (الرمال 02) - تقرت" }, { name: "إبتدائية المجاهد كافي عبد الرحيم - تقرت" }, { name: "إبتدائية المجاهد عظامو محمد - تقرت" }, { name: "إبتدائية بولعراس ابراهيم - تقرت" }, { name: "إبتدائية حي النضال مجمع مدرسي حي 1190 مسكن - تقرت" }, { name: "إبتدائية عمان يوسف - تقرت" }, { name: "إبتدائية دباخ أحمد المستقبل الجنوبي 7 - تقرت" }, { name: "إبتدائية بالعيد مشري المستقبل الشمالي - تقرت" }, { name: "إبتدائية دباغ عمر المستقبل الجنوبي 09 - تقرت" }, { name: "إبتدائية تاتاي عبد القادر - تقرت" }, { name: "إبتدائية الشهيد بالطاهر علي المستقبل الشمالي - تقرت" }, { name: "إبتدائية المجاهد قادري علال حي 700 مسكن - تقرت" }],
   "سيدي سليمان": [{ name: "إبتدائية بوسعادة بن دلالي - سيدي سليمان" }, { name: "إبتدائية العربي التبسي - سيدي سليمان" }, { name: "إبتدائية الطيب بوريالة - سيدي سليمان" }, { name: "إبتدائية بركبية محمد بكار - سيدي سليمان" }, { name: "إبتدائية الشهيد بن قطان السايح - سيدي سليمان" }, { name: "إبتدائية باسو السعيد - سيدي سليمان" }],
   "تماسين": [{ name: "إبتدائية مولود فرعون - نماسين" }, { name: "إبتدائية الطالب السعدي بوخندق - نماسين" }, { name: "إبتدائية الشيخ الصغير التجاني - نماسين" }, { name: "إبتدائية الشيخ الصادق التجاني - نماسين" }, { name: "إبتدائية البشيرتاتي - نماسين" }, { name: "إبتدائية المجاهد بكوش محمد العيد - نماسين" }, { name: "إبتدائية المجاهد رزقان احمد - نماسين" }, { name: "إبتدائية المجاهد لبسيس إبراهيم - نماسين" }, { name: "إبتدائية بوبكري بشير - نماسين" }, { name: "إبتدائية بن قانة براهيم (البحور 2) - نماسين" }, { name: "إبتدائية المجاهد تجاني عبد الحق (حي الكودية ) - نماسين" }]
 };
 
 const institutionsByDaaira = {
   "توقرت": {
-    "متوسط": [{ name: "مديرية التربية" },{ name: "متوسطة سعد بن أبي وقاص – توقرت" }, { name: "متوسطة الإمام علي – توقرت" }, { name: "متوسطة محمد الأمين العمودي – توقرت" }, { name: "متوسطة الشيخ المقراني – تبسبست" }, { name: "متوسطة بن هدية المدني – النزلة" }, { name: "متوسطة عبد الحميد بن باديس – توقرت" }, { name: "متوسطة حمزة بن عبد المطلب – الزاوية العابدية" }, { name: "متوسطة نصرات حشاني – تبسبست" }, { name: "متوسطة عيسات ايدير – البهجة تبسبست" }, { name: "متوسطة تجيني محمد – عين الصحراء النزلة" }, { name: "متوسطة ابن رشد – حي العرقوب توقرت" }, { name: "متوسطة رضا حوحو – الزاوية العابدية" }, { name: "متوسطة ميعادي فخر الدين – النزلة" }, { name: "متوسطة عطالي محمد الصغير – سيدي مهدي النزلة" }, { name: "متوسطة محمد عمران بوليفة – حي الرمال توقرت" }, { name: "متوسطة عبد المؤمن بن علي – النزلة" }, { name: "متوسطة بن الزاوي علي – تبسبست" }, { name: "متوسطة البشير الإبراهيمي – توقرت" }, { name: "متوسطة حي 5 جويلية – الزاوية العابدية" }, { name: "متوسطة بن حيزية عبد الله – عين الصحراء النزلة" }, { name: "متوسطة بن قلية محمد – الزاوية العابدية" }, { name: "متوسطة تمرني محمد – توقرت" }, { name: "متوسطة شاوش محمد – تبسبست" }, { name: "متوسطة المجاهد التجاني الصادق – النزلة" }, { name: "متوسطة خروبي محمد لخضر – النزلة" }, { name: "متوسطة المجاهد سبقاق العيد – توقرت" }, { name: "متوسطة دقعة الطاهر – تبسبست" }, { name: "متوسطة بدودة معمر بن علي – النزلة" }, { name: "متوسطة داشر الحاج – حي المستقبل توقرت" }, { name: "متوسطة المجاهد رواص محمد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد بوليفة محمد العيد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد عماري السايح – حي المستقبل توقرت" }],
-    "ثانوي": [{ name: "مديرية التربية" },{ name: "ثانوية الأمير عبد القادر – توقرت" }, { name: "ثانوية عبد الرحمان الكواكبي – تبسبست" }, { name: "ثانوية الحسن بن الهيثم – النزلة" }, { name: "ثانوية البشير الإبراهيمي – تبسبست" }, { name: "ثانوية هواري بومدين – الزاوية العابدية" }, { name: "ثانوية أبو بكر بلقايد – النزلة" }, { name: "ثانوية لزهاري تونسي – الزاوية العابدية" }, { name: "ثانوية بوخاري عبد المالك – النزلة" }, { name: "ثانوية عبودة علي – حي المستقبل توقرت" }, { name: "ثانوية مسغوني محمد الصالح – حي المستقبل" }]
+    "متوسط": [{ name: "متوسطة سعد بن أبي وقاص – توقرت" }, { name: "متوسطة الإمام علي – توقرت" }, { name: "متوسطة محمد الأمين العمودي – توقرت" }, { name: "متوسطة الشيخ المقراني – تبسبست" }, { name: "متوسطة بن هدية المدني – النزلة" }, { name: "متوسطة عبد الحميد بن باديس – توقرت" }, { name: "متوسطة حمزة بن عبد المطلب – الزاوية العابدية" }, { name: "متوسطة نصرات حشاني – تبسبست" }, { name: "متوسطة عيسات ايدير – البهجة تبسبست" }, { name: "متوسطة تجيني محمد – عين الصحراء النزلة" }, { name: "متوسطة ابن رشد – حي العرقوب توقرت" }, { name: "متوسطة رضا حوحو – الزاوية العابدية" }, { name: "متوسطة ميعادي فخر الدين – النزلة" }, { name: "متوسطة عطالي محمد الصغير – سيدي مهدي النزلة" }, { name: "متوسطة محمد عمران بوليفة – حي الرمال توقرت" }, { name: "متوسطة عبد المؤمن بن علي – النزلة" }, { name: "متوسطة بن الزاوي علي – تبسبست" }, { name: "متوسطة البشير الإبراهيمي – توقرت" }, { name: "متوسطة حي 5 جويلية – الزاوية العابدية" }, { name: "متوسطة بن حيزية عبد الله – عين الصحراء النزلة" }, { name: "متوسطة بن قلية محمد – الزاوية العابدية" }, { name: "متوسطة تمرني محمد – توقرت" }, { name: "متوسطة شاوش محمد – تبسبست" }, { name: "متوسطة المجاهد التجاني الصادق – النزلة" }, { name: "متوسطة خروبي محمد لخضر – النزلة" }, { name: "متوسطة المجاهد سبقاق العيد – توقرت" }, { name: "متوسطة دقعة الطاهر – تبسبست" }, { name: "متوسطة بدودة معمر بن علي – النزلة" }, { name: "متوسطة داشر الحاج – حي المستقبل توقرت" }, { name: "متوسطة المجاهد رواص محمد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد بوليفة محمد العيد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد عماري السايح – حي المستقبل توقرت" }],
+    "ثانوي": [{ name: "ثانوية الأمير عبد القادر – توقرت" }, { name: "ثانوية عبد الرحمان الكواكبي – تبسبست" }, { name: "ثانوية الحسن بن الهيثم – النزلة" }, { name: "ثانوية البشير الإبراهيمي – تبسبست" }, { name: "ثانوية هواري بومدين – الزاوية العابدية" }, { name: "ثانوية أبو بكر بلقايد – النزلة" }, { name: "ثانوية لزهاري تونسي – الزاوية العابدية" }, { name: "ثانوية بوخاري عبد المالك – النزلة" }, { name: "ثانوية عبودة علي – حي المستقبل توقرت" }, { name: "ثانوية مسغوني محمد الصالح – حي المستقبل" }]
   },
   "الحجيرة": {
     "متوسط": [{ name: "متوسطة ابن سينا – الحجيرة" }, { name: "متوسطة لخضاري لخضر – العالية" }, { name: "متوسطة زوابري مسعود – لقراف الحجيرة" }, { name: "متوسطة السايح بن عيسى محمد السايح – العالية" }, { name: "متوسطة بن شويحة حمزة – الحجيرة" }, { name: "متوسطة شلغوم بشير – الشقة العالية" }, { name: "متوسطة المجاهد شعيب الأخضر – الحجيرة" }],
@@ -260,8 +279,15 @@ window.loadData = async function() {
 window.applyFilters = function() {
     const query = document.getElementById("searchInput").value.toLowerCase();
     const statusFilter = document.getElementById("statusFilter").value;
+    
+    // جلب قيم الفلاتر الجديدة
+    const fLevel = document.getElementById("filter_level").value;
+    const fDaaira = document.getElementById("filter_daaira").value;
+    const fBaladiya = document.getElementById("filter_baladiya").value;
+    const fSchool = document.getElementById("filter_school").value;
 
     filteredData = allData.filter(row => {
+        // 1. بحث النص
         const matchesSearch = (
             (row.fmn && row.fmn.includes(query)) ||
             (row.frn && row.frn.includes(query)) ||
@@ -270,20 +296,30 @@ window.applyFilters = function() {
             (row.schoolName && row.schoolName.includes(query))
         );
 
+        // 2. فلتر الحالة (مؤكد/غير مؤكد)
         let matchesStatus = true;
         const isConfirmed = String(row.confirmed).toLowerCase() === "true";
-
         if (statusFilter === "confirmed") {
             matchesStatus = isConfirmed;
         } else if (statusFilter === "pending") {
             matchesStatus = !isConfirmed;
         }
 
-        return matchesSearch && matchesStatus;
+        // 3. 🆕 الفلاتر الجديدة (الطور، الدائرة، البلدية، المؤسسة)
+        // التحقق فقط إذا كان الفلتر له قيمة (ليس فارغاً)
+        const matchesLevel = fLevel === "" || row.level === fLevel;
+        const matchesDaaira = fDaaira === "" || row.daaira === fDaaira;
+        const matchesBaladiya = fBaladiya === "" || row.baladiya === fBaladiya;
+        const matchesSchool = fSchool === "" || row.schoolName === fSchool;
+
+        return matchesSearch && matchesStatus && matchesLevel && matchesDaaira && matchesBaladiya && matchesSchool;
     });
 
     currentPage = 1;
     window.renderCurrentPage();
+    
+    // تحديث العدادات بناءً على الفلترة الحالية (اختياري - ليعرف المستخدم عدد النتائج المفلترة)
+    // window.updateStats(filteredData); // يمكنك تفعيل هذا السطر إذا أردت العدادات تتغير مع الفلتر
 };
 
 window.renderCurrentPage = function() {
@@ -1655,3 +1691,580 @@ window.exportNonRegisteredExcel = function() {
     link.click();
     document.body.removeChild(link);
 };
+
+// ==========================================
+// 🖨️ نظام الطباعة المجمعة (Batch Print)
+// ==========================================
+
+// 1. فتح نافذة خيارات الطباعة
+// ==========================================
+// 🖨️ 1. نافذة خيارات الطباعة (بتصميم جديد ومنطق ذكي)
+// ==========================================
+window.openBatchPrintModal = function() {
+    let daairaOptions = '<option value="">-- اختر الدائرة --</option>';
+    ["توقرت", "تماسين", "المقارين", "الحجيرة", "الطيبات"].forEach(d => {
+        daairaOptions += `<option value="${d}">${d}</option>`;
+    });
+
+    Swal.fire({
+        title: '<strong>طباعة الاستمارات المجمعة</strong>',
+        html: `
+            <div style="text-align: right; font-size: 14px; padding: 10px;">
+                
+                <div class="edit-form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:bold; color:#d63384;">1. اختر الطور (إجباري للفلترة الذكية)</label>
+                    <select id="print_level" class="filter-select" style="width:100%; padding:8px;" onchange="window.updatePrintFilters('level')">
+                        <option value="">-- اختر الطور --</option>
+                        <option value="ابتدائي">ابتدائي</option>
+                        <option value="متوسط">متوسط</option>
+                        <option value="ثانوي">ثانوي</option>
+                        <option value="مديرية التربية">مديرية التربية</option>
+                    </select>
+                </div>
+
+                <div class="edit-form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:bold;">2. الدائرة</label>
+                    <select id="print_daaira" class="filter-select" style="width:100%; padding:8px;" onchange="window.updatePrintFilters('daaira')">
+                        ${daairaOptions}
+                    </select>
+                </div>
+                
+                <div class="edit-form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:bold;">3. البلدية</label>
+                    <select id="print_baladiya" class="filter-select" style="width:100%; padding:8px;" onchange="window.updatePrintFilters('baladiya')">
+                        <option value="">-- اختر البلدية --</option>
+                    </select>
+                </div>
+
+                <div class="edit-form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px; font-weight:bold;">4. المؤسسة (اتركه فارغاً لطباعة الكل)</label>
+                    <select id="print_school" class="filter-select" style="width:100%; padding:8px;">
+                        <option value="">-- كل المؤسسات --</option>
+                    </select>
+                </div>
+                
+                <div style="background:#e3f2fd; padding:10px; border-radius:5px; font-size:12px; color:#0d47a1; margin-top:10px;">
+                    <i class="fas fa-info-circle"></i> ملاحظة: عند اختيار "مديرية التربية"، سيتم تحديد الموقع والمؤسسة تلقائياً.
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'بدء الطباعة <i class="fas fa-print"></i>',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#0d6efd',
+        width: '600px',
+        preConfirm: () => {
+            return {
+                daaira: document.getElementById('print_daaira').value,
+                baladiya: document.getElementById('print_baladiya').value,
+                level: document.getElementById('print_level').value,
+                school: document.getElementById('print_school').value
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.executeBatchPrint(result.value);
+        }
+    });
+};
+// ==========================================
+// 🖨️ 2. دالة تحديث فلاتر الطباعة (مع التصفير التلقائي)
+// ==========================================
+window.updatePrintFilters = function(source) { // source: 'level' أو 'daaira' أو 'baladiya'
+    const pLevel = document.getElementById("print_level").value;
+    const pDaaira = document.getElementById("print_daaira");
+    const pBaladiya = document.getElementById("print_baladiya");
+    const pSchool = document.getElementById("print_school");
+
+    // ----------------------------------------------------
+    // 🧹 منطق التصفير (Reset Logic)
+    // ----------------------------------------------------
+    
+    // إذا غيرنا الطور -> صفر الدائرة والبلدية والمؤسسة
+    if (source === 'level') {
+        if (pLevel !== "مديرية التربية") { 
+            pDaaira.value = "";
+            pBaladiya.innerHTML = '<option value="">-- اختر البلدية --</option>';
+            pSchool.innerHTML = '<option value="">-- كل المؤسسات --</option>';
+        }
+    }
+    // إذا غيرنا الدائرة -> صفر البلدية والمؤسسة
+    else if (source === 'daaira') {
+        pBaladiya.innerHTML = '<option value="">-- اختر البلدية --</option>';
+        pSchool.innerHTML = '<option value="">-- كل المؤسسات --</option>';
+    }
+    // إذا غيرنا البلدية -> صفر المؤسسة
+    else if (source === 'baladiya') {
+        pSchool.innerHTML = '<option value="">-- كل المؤسسات --</option>';
+    }
+
+    // ----------------------------------------------------
+    // 🏢 منطق مديرية التربية
+    // ----------------------------------------------------
+    if (pLevel === "مديرية التربية") {
+        pDaaira.value = "توقرت";
+        pBaladiya.innerHTML = ""; pBaladiya.add(new Option("توقرت", "توقرت")); pBaladiya.value = "توقرت";
+        pSchool.innerHTML = ""; pSchool.add(new Option("مديرية التربية لولاية توقرت", "مديرية التربية لولاية توقرت")); pSchool.value = "مديرية التربية لولاية توقرت";
+        return; 
+    }
+
+    // ----------------------------------------------------
+    // 🔄 المنطق العادي (تحديث القوائم)
+    // ----------------------------------------------------
+    const selectedDaaira = pDaaira.value;
+    const currentBaladiya = pBaladiya.value;
+
+    // 1. تحديث قائمة البلديات
+    pBaladiya.innerHTML = '<option value="">-- اختر البلدية --</option>';
+    
+    if (selectedDaaira && baladiyaMap[selectedDaaira]) {
+        baladiyaMap[selectedDaaira].forEach(bal => {
+            pBaladiya.add(new Option(bal, bal));
+        });
+        
+        // هام: نسترجع القيمة السابقة فقط إذا لم نكن نحن من قام بتغيير الدائرة أو الطور
+        if (source !== 'daaira' && source !== 'level') {
+            pBaladiya.value = currentBaladiya;
+        }
+    }
+
+    // 2. تحديث قائمة المؤسسات
+    pSchool.innerHTML = '<option value="">-- كل المؤسسات --</option>';
+    let schoolsList = [];
+
+    if (pLevel === "ابتدائي") {
+        const selBal = pBaladiya.value;
+        if (selBal && primarySchoolsByBaladiya[selBal]) {
+            schoolsList = primarySchoolsByBaladiya[selBal];
+        }
+    } 
+    else if (pLevel === "متوسط" || pLevel === "ثانوي") {
+        if (selectedDaaira && institutionsByDaaira[selectedDaaira] && institutionsByDaaira[selectedDaaira][pLevel]) {
+            schoolsList = institutionsByDaaira[selectedDaaira][pLevel];
+        }
+    }
+
+    schoolsList.forEach(sch => {
+        pSchool.add(new Option(sch.name, sch.name));
+    });
+};
+
+// 3. تنفيذ الطباعة وبناء HTML
+window.executeBatchPrint = function(filters) {
+    // 1. تصفية البيانات
+    let printData = allData.filter(row => {
+        const matchDaaira = !filters.daaira || row.daaira === filters.daaira;
+        const matchBaladiya = !filters.baladiya || row.baladiya === filters.baladiya;
+        const matchLevel = !filters.level || row.level === filters.level;
+        const matchSchool = !filters.school || row.schoolName === filters.school;
+        return matchDaaira && matchBaladiya && matchLevel && matchSchool;
+    });
+
+    if (printData.length === 0) {
+        Swal.fire('تنبيه', 'لا توجد بيانات مطابقة للخيارات المحددة', 'warning');
+        return;
+    }
+
+    // 2. تجميع البيانات حسب المؤسسة
+    const groupedData = printData.reduce((acc, curr) => {
+        const school = curr.schoolName || "غير محدد";
+        if (!acc[school]) acc[school] = [];
+        acc[school].push(curr);
+        return acc;
+    }, {});
+
+    const sortedSchools = Object.keys(groupedData).sort();
+    const printDate = new Date().toLocaleDateString('ar-DZ');
+    let printContentHTML = '';
+
+    // 3. بناء المحتوى
+    sortedSchools.forEach((schoolName) => {
+        const employees = groupedData[schoolName];
+        
+        // --- حساب الإحصائيات ---
+        const total = employees.length;
+        const confirmedList = employees.filter(e => String(e.confirmed).toLowerCase() === "true");
+        const unconfirmedList = employees.filter(e => String(e.confirmed).toLowerCase() !== "true");
+        
+        const confirmedCount = confirmedList.length;
+        const unconfirmedCount = unconfirmedList.length;
+
+        // --- تجهيز قائمة أسماء غير المؤكدين ---
+        let unconfirmedNamesHTML = '';
+        if (unconfirmedCount > 0) {
+            unconfirmedNamesHTML = `
+                <div class="unconfirmed-box">
+                    <div class="unconfirmed-title">⚠️ قائمة الموظفين غير المؤكدين (${unconfirmedCount})</div>
+                    <ul class="unconfirmed-list">
+                        ${unconfirmedList.map(e => `<li>▪ ${e.fmn} ${e.frn} (${e.job || 'بدون وظيفة'})</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        } else {
+            unconfirmedNamesHTML = `
+                <div class="all-confirmed-msg">
+                    ✅ جميع موظفي المؤسسة مؤكدين
+                </div>
+            `;
+        }
+
+        // --- (أ) الصفحة الفاصلة (محدثة) ---
+        // تظهر دائماً كغلاف للمؤسسة
+        printContentHTML += `
+            <div class="school-separator-page">
+                <div class="separator-border">
+                    <div class="header-section">
+                        <h1>الجمهورية الجزائرية الديمقراطية الشعبية</h1>
+                        <h2>مديرية التربية لولاية توقرت</h2>
+                    </div>
+                    
+                    <div class="school-name-box">
+                        <h1>${schoolName}</h1>
+                    </div>
+
+                    <div class="stats-container">
+                        <div class="stat-item total">
+                            <span class="stat-label">الإجمالي</span>
+                            <span class="stat-val">${total}</span>
+                        </div>
+                        <div class="stat-item confirmed">
+                            <span class="stat-label">المؤكدة</span>
+                            <span class="stat-val">${confirmedCount}</span>
+                        </div>
+                        <div class="stat-item pending">
+                            <span class="stat-label">غير المؤكدة</span>
+                            <span class="stat-val">${unconfirmedCount}</span>
+                        </div>
+                    </div>
+
+                    ${unconfirmedNamesHTML}
+
+                    <div class="footer-section">
+                        <p>تاريخ الاستخراج: ${printDate}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // --- (ب) استمارات الموظفين ---
+        employees.forEach(emp => {
+            printContentHTML += window.generateSingleFormHTML(emp);
+        });
+    });
+
+    // 4. نافذة الطباعة (CSS محدث لضمان التوسط)
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html lang="ar" dir="rtl">
+        <head>
+            <title>طباعة مجمعة - ${printDate}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+            <style>
+                @page { size: A4; margin: 0; }
+                body { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; background: #eee; }
+                
+                /* تنسيق الصفحة الفاصلة لضمان التوسط في كل الصفحات */
+                .school-separator-page {
+                    width: 210mm;
+                    height: 296mm; /* ارتفاع A4 كامل */
+                    background: white;
+                    position: relative;
+                    display: flex;
+                    justify-content: center; /* توسيط أفقي */
+                    align-items: center;     /* توسيط عمودي */
+                    page-break-after: always;
+                    overflow: hidden;
+                    box-sizing: border-box;
+                    margin: 0 auto; /* ضمان التوسط في المعاينة */
+                }
+
+                .separator-border {
+                    width: 90%;
+                    height: 90%;
+                    border: 5px double #333;
+                    padding: 20px;
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start; /* المحتوى يبدأ من الأعلى */
+                    align-items: center;
+                    box-sizing: border-box;
+                }
+
+                .header-section h1, .header-section h2 { margin: 5px 0; color: #555; font-size: 16px; }
+                
+                .school-name-box {
+                    margin: 30px 0 20px 0;
+                    padding: 20px;
+                    border: 2px solid #000;
+                    background-color: #f8f9fa;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .school-name-box h1 { font-size: 28px; font-weight: 800; margin: 0; }
+
+                /* تنسيق الإحصائيات */
+                .stats-container {
+                    display: flex;
+                    justify-content: center;
+                    gap: 15px;
+                    width: 100%;
+                    margin-bottom: 25px;
+                }
+                .stat-item {
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                    border-radius: 8px;
+                    width: 30%;
+                    text-align: center;
+                }
+                .stat-label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+                .stat-val { display: block; font-size: 24px; font-weight: 800; }
+                
+                .stat-item.total { background: #e3f2fd; color: #0d47a1; border-color: #90caf9; }
+                .stat-item.confirmed { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; }
+                .stat-item.pending { background: #ffebee; color: #b71c1c; border-color: #ef9a9a; }
+
+                /* تنسيق قائمة غير المؤكدين */
+                .unconfirmed-box {
+                    width: 100%;
+                    border: 2px dashed #d9534f;
+                    background-color: #fffdfd;
+                    border-radius: 8px;
+                    padding: 10px;
+                    text-align: right;
+                    flex-grow: 1; /* يأخذ المساحة المتبقية */
+                    overflow: hidden;
+                }
+                .unconfirmed-title {
+                    font-weight: bold; color: #d9534f; border-bottom: 1px solid #eee; 
+                    padding-bottom: 5px; margin-bottom: 10px; text-align: center;
+                }
+                .unconfirmed-list {
+                    list-style: none; padding: 0; margin: 0;
+                    column-count: 2; /* تقسيم الأسماء لعمودين */
+                    column-gap: 20px;
+                    font-size: 13px;
+                }
+                .unconfirmed-list li { margin-bottom: 5px; border-bottom: 1px solid #f0f0f0; }
+
+                .all-confirmed-msg {
+                    margin-top: 50px;
+                    padding: 20px;
+                    font-size: 20px;
+                    color: #28a745;
+                    font-weight: bold;
+                    border: 2px solid #28a745;
+                    border-radius: 10px;
+                }
+
+                .footer-section { margin-top: auto; font-size: 12px; color: #777; }
+
+                /* استمارة الموظف العادية */
+                .form-page-container {
+                    width: 210mm;
+                    height: 296mm;
+                    background: white;
+                    padding: 10mm 15mm;
+                    margin: 0 auto;
+                    box-sizing: border-box;
+                    page-break-after: always;
+                }
+
+                @media print {
+                    body { background: white; }
+                    .no-print { display: none !important; }
+                    /* إجبار المتصفح على احترام الأبعاد */
+                    .school-separator-page, .form-page-container { 
+                        width: 210mm; height: 296mm; 
+                        page-break-after: always;
+                    }
+                }
+                .print-btn-float { position: fixed; bottom: 20px; left: 20px; background: #333; color: white; padding: 15px 30px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; font-size: 16px; z-index: 999; }
+                
+                /* بقية تنسيقات الاستمارة القديمة (ضرورية للعرض) */
+                .print-official-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding-bottom: 10px; border-bottom: 3px double #000; }
+                .print-logo-img { width: 100px; height: auto; object-fit: contain; }
+                .print-titles-official { text-align: center; flex-grow: 1; }
+                .print-titles-official h3 { margin: 2px 0; font-size: 14px; font-weight: 700; color: #000; }
+                .print-form-title-box { border: 2px solid #000; border-radius: 6px; padding: 5px; margin: 10px 0 15px 0; text-align: center; background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; }
+                .print-main-title { margin: 0; font-size: 18px; font-weight: 800; color: #000; text-decoration: underline; text-underline-offset: 4px; }
+                .print-date { margin-top: 5px; font-size: 11px; font-weight: 600; }
+                .data-table { width: 100%; border-collapse: collapse; margin: 5px 0; font-size: 13px; border: 2px solid #000; }
+                .data-table th { background-color: #eee !important; -webkit-print-color-adjust: exact; padding: 5px 8px; border: 1px solid #000; width: 35%; text-align: right; font-weight: 800; }
+                .data-table td { padding: 5px 8px; border: 1px solid #000; font-weight: 600; color: #000; text-align: right; }
+                .auth-box { border: 2px solid #000; padding: 8px; margin: 15px 0; background-color: #fff !important; font-size: 13px; text-align: center; }
+                .auth-title { display: block; font-weight: 800; margin-bottom: 5px; font-size: 14px; }
+                .auth-details { display: flex; justify-content: center; gap: 20px; }
+                .signature-section { margin-top: 30px; display: flex; justify-content: space-between; padding: 0 20px; }
+                .signature-box { text-align: center; border: 1px dashed #000; padding: 10px; width: 200px; height: 100px; }
+                .signature-box strong { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 800; }
+                .signature-box small { display: block; font-size: 11px; font-weight: 600; }
+            </style>
+        </head>
+        <body>
+            <button class="print-btn-float no-print" onclick="window.print()">🖨️ طباعة الكل</button>
+            ${printContentHTML}
+            <script>
+                window.onload = function() { setTimeout(function() { window.print(); }, 1000); }
+            </script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+};
+
+// 4. دالة مساعدة لتوليد HTML الاستمارة الواحدة (بدون فتح نافذة)
+window.generateSingleFormHTML = function(d) {
+    const printDate = new Date().toLocaleDateString('ar-DZ');
+    const birthDate = d.diz ? window.fmtDate(d.diz) : "---";
+    const confirmerName = d.confirmed_by || "---";
+    const confirmerPhone = d.reviewer_phone || "---";
+    const jobTitle = d.job || d.gr || "---";
+
+    return `
+    <div class="form-page-container">
+        <div class="print-official-header">
+            <img src="https://lh3.googleusercontent.com/d/1BqWoqh1T1lArUcwAGNF7cGnnN83niKVl" alt="شعار" class="print-logo-img">
+            <div class="print-titles-official">
+                <h3>الجمهورية الجزائرية الديمقراطية الشعبية</h3>
+                <h3>وزارة التربية الوطنية</h3>
+                <h3>مديرية التربية لولاية توقرت</h3>
+                <h3>مصلحة تسيير نفقات المستخدمين</h3>
+            </div>
+            <img src="https://lh3.googleusercontent.com/d/1BqWoqh1T1lArUcwAGNF7cGnnN83niKVl" alt="شعار" class="print-logo-img">
+        </div>
+
+        <div class="print-form-title-box">
+            <h2 class="print-main-title">استمارة معلومات الموظف</h2>
+            <div class="print-date">تاريخ الاستخراج: <span>${printDate}</span></div>
+        </div>
+
+        <table class="data-table">
+            <tr><th>اللقب</th><td>${d.fmn}</td></tr>
+            <tr><th>الاسم</th><td>${d.frn}</td></tr>
+            <tr><th>تاريخ الميلاد</th><td>${birthDate}</td></tr>
+            <tr><th>رقم الحساب البريدي (CCP)</th><td>${d.ccp}</td></tr>
+            <tr><th>رقم الضمان الاجتماعي</th><td>${d.ass}</td></tr>
+            <tr><th>الرتبة / الوظيفة</th><td>${jobTitle}</td></tr>
+            <tr><th>مكان العمل</th><td>${d.schoolName || ''}</td></tr>
+            <tr><th>الدائرة / البلدية</th><td>${d.daaira || ''} / ${d.baladiya || ''}</td></tr>
+            <tr><th>رقم الهاتف</th><td style="text-align: right;"><span dir="ltr">${d.phone}</span></td></tr>
+            <tr><th>رقم التعريف الوطني (NIN)</th><td>${d.nin || ''}</td></tr>
+        </table>
+
+        <div class="auth-box">
+            <div class="auth-title">✅ مصادقة المعلومات:</div>
+            <div class="auth-details">
+                <span>اسم المؤكد: <span style="font-weight:bold;">${confirmerName}</span></span>
+                <span style="border-left: 2px solid #ccc; margin: 0 10px;"></span>
+                <span>رقم الهاتف: <span dir="ltr" style="font-weight:bold;">${confirmerPhone}</span></span>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <strong>إمضاء المعني</strong>
+                <small>أصرح بصحة المعلومات</small>
+            </div>
+            <div class="signature-box">
+                <strong>إمضاء وختم الإدارة</strong>
+                <small>مصادق عليه</small>
+            </div>
+        </div>
+    </div>
+    `;
+};
+
+// ==========================================
+// 🆕 دالة تحديث خرائط الفلترة (مع التصفير الذكي)
+// ==========================================
+window.updateDashMaps = function(source) { // source: 'level' | 'daaira' | 'baladiya'
+    const fLevel = document.getElementById("filter_level").value;
+    const fDaaira = document.getElementById("filter_daaira");
+    const fBaladiya = document.getElementById("filter_baladiya");
+    const fSchool = document.getElementById("filter_school");
+
+    // ----------------------------------------------------
+    // 🧹 1. منطق التصفير (Reset Logic)
+    // ----------------------------------------------------
+    
+    // إذا تغير الطور -> صفر الدائرة (إلا إذا كانت مديرية)، صفر البلدية والمؤسسة
+    if (source === 'level') {
+        if (fLevel !== "مديرية التربية") {
+            fDaaira.value = ""; 
+            fBaladiya.innerHTML = '<option value="">-- البلدية --</option>';
+            fSchool.innerHTML = '<option value="">-- المؤسسة --</option>';
+        }
+    }
+    // إذا تغيرت الدائرة -> صفر البلدية والمؤسسة
+    else if (source === 'daaira') {
+        fBaladiya.innerHTML = '<option value="">-- البلدية --</option>';
+        fSchool.innerHTML = '<option value="">-- المؤسسة --</option>';
+    }
+    // إذا تغيرت البلدية -> صفر المؤسسة
+    else if (source === 'baladiya') {
+        fSchool.innerHTML = '<option value="">-- المؤسسة --</option>';
+    }
+
+    // ----------------------------------------------------
+    // 🏢 2. منطق مديرية التربية (تعبئة إجبارية)
+    // ----------------------------------------------------
+    if (fLevel === "مديرية التربية") {
+        fDaaira.value = "توقرت";
+        
+        fBaladiya.innerHTML = ""; 
+        fBaladiya.add(new Option("توقرت", "توقرت")); 
+        fBaladiya.value = "توقرت";
+
+        fSchool.innerHTML = ""; 
+        fSchool.add(new Option("مديرية التربية لولاية توقرت", "مديرية التربية لولاية توقرت")); 
+        fSchool.value = "مديرية التربية لولاية توقرت";
+        
+        return; 
+    }
+
+    // ----------------------------------------------------
+    // 🔄 3. المنطق العادي لبقية الأطوار
+    // ----------------------------------------------------
+    const selectedDaaira = fDaaira.value;
+    const currentBaladiya = fBaladiya.value; // الحفاظ على القيمة إذا لم نكن نحن من صفرها
+
+    // أ) تحديث قائمة البلديات
+    fBaladiya.innerHTML = '<option value="">-- البلدية --</option>';
+    
+    if (selectedDaaira && baladiyaMap[selectedDaaira]) {
+        baladiyaMap[selectedDaaira].forEach(bal => {
+            fBaladiya.add(new Option(bal, bal));
+        });
+        
+        // استرجاع القيمة فقط إذا لم نقم بتغيير الدائرة أو الطور للتو
+        if (source !== 'daaira' && source !== 'level') {
+            fBaladiya.value = currentBaladiya;
+        }
+    }
+
+    // ب) تحديث قائمة المؤسسات
+    fSchool.innerHTML = '<option value="">-- المؤسسة --</option>';
+    let schoolsList = [];
+
+    if (fLevel === "ابتدائي") {
+        const selBal = fBaladiya.value;
+        if (selBal && primarySchoolsByBaladiya[selBal]) {
+            schoolsList = primarySchoolsByBaladiya[selBal];
+        }
+    } 
+    else if (fLevel === "متوسط" || fLevel === "ثانوي") {
+        if (selectedDaaira && institutionsByDaaira[selectedDaaira] && institutionsByDaaira[selectedDaaira][fLevel]) {
+            schoolsList = institutionsByDaaira[selectedDaaira][fLevel];
+        }
+    }
+
+    // ملء القائمة
+    schoolsList.forEach(sch => {
+        fSchool.add(new Option(sch.name, sch.name));
+    });
+};
+
+
+

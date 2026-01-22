@@ -1,3 +1,4 @@
+
 // ============================================================
 // كود استقبال الإشارة السرية (postMessage)
 // ============================================================
@@ -169,7 +170,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // 🛑🛑🛑 استبدل هذا الرابط برابط السكريبت الخاص بك 🛑🛑🛑
-const scriptURL = "https://script.google.com/macros/s/AKfycbyyLvN_8-H7qv2vAdsw360TE8seYWAV2pGbQ2jSHbc0aVd65gpeRc4CCt6_lgrStZZY/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyXEdCPd-rrImLFLZObPXbeELUqj71mknOOFB7sjMCh6JQE-L7yMIsgFlFXrA5-VTUjRg/exec";
 
 // --- خريطة الرتب ---
 const gradeMap = {
@@ -1100,9 +1101,8 @@ function openAdminModal() {
           style="text-align: center; font-weight: bold; font-size: 18px; letter-spacing: 2px; width: 80%; margin: 0 auto; display: block;"
           oninput="this.value = this.value.replace(/[^0-9]/g, '')">
       </div>
-      
-      <div style="font-size: 12px; color: #888;">
-        * النظام سيقوم بضبط الأصفار تلقائياً لتطابق قاعدة البيانات
+      <div style="font-size: 12px;font-weight: bold; color: #FF0000;">
+        *  ملاحظة: الموظف الغير مؤكدة معلوماته لايظهر في قائمة الموظفين والإستمارات إلا بعد تأكيد المعلومات
       </div>
     </div>
   `;
@@ -1197,7 +1197,7 @@ function showRestrictedAdminPanel(empData) {
     <div style="font-family: 'Cairo', sans-serif; direction: rtl; text-align: right;">
       
       <div style="background: linear-gradient(45deg, #2575fc, #6a11cb); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <div style="font-size: 12px; opacity: 0.9;">مرحباً بالسيد(ة) المدير(ة):</div>
+        <div style="font-size: 12px; opacity: 0.9;">مرحباً بالسيد(ة) المدير(ة) أو المسؤول(ة):</div>
         <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">${directorName}</div>
       </div>
 
@@ -1410,13 +1410,16 @@ function generateEmployeesTable(data, schoolName) {
                     <i class="fas fa-file-excel"></i> تحميل Excel
                 </button>
             </div>
+            <div style="font-size: 14px;font-weight: bold; color: #FF0000;">
+        *  ملاحظة: يمكنك الضغط على الموظف الغير مؤكدة بياناته و تأكيدها من خلال قائمة الموظفين.
+      </div>
         </div>
 
         <div style="overflow-x:auto; overflow-y:auto; max-height:65vh; border-radius: 6px; border: 1px solid #ddd;">
             <table id="empTable" class="modern-table">
                 <thead>
                     <tr>
-                        <th width="5%">#</th>
+                        <th width="5%">الرقم</th>
                         <th width="15%">رقم التعريف</th>
                         <th width="15%">اللقب</th>
                         <th width="15%">الاسم</th>
@@ -1691,6 +1694,11 @@ function exportTableToExcel(tableId, filename = 'export') {
     a.click();
     document.body.removeChild(a);
 }
+
+
+
+
+
 
 
 
