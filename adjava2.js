@@ -2881,6 +2881,36 @@ window.startSupportListener = function() {
 };
 
 // 2. دالة فتح نافذة الطلبات عند الضغط على الزر
+// ==========================================
+// 🛠️ دالة الاتصال الذكي بـ TeamViewer
+// ==========================================
+window.connectToTeamViewer = function(id, pass) {
+    // 1. نسخ كلمة المرور للحافظة تلقائياً
+    navigator.clipboard.writeText(pass).then(() => {
+        // 2. إظهار تنبيه صغير
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
+        });
+        Toast.fire({ 
+            icon: 'success', 
+            title: 'تم نسخ كلمة المرور! (فقط اضغط لصق)' 
+        });
+
+        // 3. فتح TeamViewer مع تمرير المعرف (ID)
+        // نحاول عدة صيغ لضمان فتح أي نسخة مثبتة
+        setTimeout(() => {
+            window.location.href = `teamviewer10://control?device=${id}`;
+        }, 500);
+    }).catch(err => {
+        console.error('فشل النسخ', err);
+        // في حال فشل النسخ التلقائي، نفتح البرنامج فقط
+        window.location.href = `teamviewer10://control?device=${id}`;
+    });
+};
+
+// ==========================================
+// 📋 نافذة عرض الطلبات (تحديث الدالة)
+// ==========================================
 window.openSupportRequestsModal = async function() {
     try {
         const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
@@ -2889,14 +2919,17 @@ window.openSupportRequestsModal = async function() {
         let tableRows = "";
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
+            // لاحظ التغيير في زر الاتصال أدناه 👇
             tableRows += `
                 <tr style="border-bottom:1px solid #eee;">
                     <td style="padding:12px;"><b>${d.name}</b><br><small style="color:#666;">${d.phone}</small></td>
                     <td style="padding:12px; color:#0d6efd; font-weight:bold; font-family:monospace; font-size:16px;">${d.tv_id}</td>
                     <td style="padding:12px; background:#fff3cd; font-weight:bold; font-family:monospace;">${d.tv_pass}</td>
                     <td style="padding:12px; text-align:center;">
-                        <button onclick="window.location.href='teamviewerapi://control?device=${d.tv_id}'" 
-                                class="btn" style="background:#28a745; color:white; padding:5px 10px; font-size:12px; border:none; border-radius:4px; cursor:pointer;">اتصال <i class="fas fa-play"></i></button>
+                        <button onclick="window.connectToTeamViewer('${d.tv_id}', '${d.tv_pass}')" 
+                                class="btn" style="background:#28a745; color:white; padding:5px 15px; font-size:12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                            <i class="fas fa-bolt"></i> اتصال
+                        </button>
                         <button onclick="window.closeSupportRequest('${docSnap.id}')" 
                                 class="btn" style="background:#dc3545; color:white; padding:5px 10px; font-size:12px; margin-top:2px; border:none; border-radius:4px; cursor:pointer;">إنهاء</button>
                     </td>
@@ -2920,6 +2953,9 @@ window.openSupportRequestsModal = async function() {
                         ${tableRows || '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">لا توجد طلبات مساعدة نشطة حالياً</td></tr>'}
                     </tbody>
                 </table>
+                <div style="margin-top:10px; font-size:12px; color:#666; text-align:center;">
+                    <i class="fas fa-info-circle"></i> عند الضغط على "اتصال"، سيتم نسخ كلمة المرور تلقائياً. قم بعمل <b>Laste (لصق)</b> في البرنامج.
+                </div>
             `,
             showConfirmButton: false,
             showCloseButton: true
