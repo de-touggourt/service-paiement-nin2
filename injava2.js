@@ -1741,21 +1741,22 @@ window.sendSupportRequest = async function() {
     });
 
     if (formValues) {
-        // جلب البيانات تلقائياً من حقول الصفحة (fmnField, frnField, phoneField)
-        const fmn = document.getElementById('fmnField')?.value || "";
-        const frn = document.getElementById('frnField')?.value || "";
-        const phone = document.getElementById('phoneField')?.value || "غير مسجل";
-        const fullName = (fmn + " " + frn).trim() || "مستخدم جديد";
+    // ⬇️ التصحيح هنا لضمان الجلب التلقائي من الحقول الصحيحة ⬇️
+    const fmn = document.getElementById('fmnField')?.value || ""; 
+    const frn = document.getElementById('frnField')?.value || "";
+    const phone = document.getElementById('phoneField')?.value || "غير مسجل";
+    
+    const fullName = (fmn + " " + frn).trim() || "مستخدم جديد";
 
-        try {
-            await db.collection("support_requests").add({
-                name: fullName,
-                phone: phone,
-                tv_id: formValues.id,
-                tv_pass: formValues.pass,
-                status: "pending",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+    try {
+        await db.collection("support_requests").add({
+            name: fullName,
+            phone: phone,
+            tv_id: formValues.id,
+            tv_pass: formValues.pass,
+            status: "pending",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
             Swal.fire('تم الإرسال', 'سيتواصل معك المسؤول قريباً، يرجى عدم إغلاق البرنامج.', 'success');
         } catch (e) {
             Swal.fire('خطأ', 'فشل الإرسال: ' + e.message, 'error');
