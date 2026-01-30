@@ -1707,49 +1707,53 @@ function exportTableToExcel(tableId, filename = 'export') {
 // دالة إرسال طلب المساعدة (TeamViewer)
 window.sendSupportRequest = async function() {
     const { value: formValues } = await Swal.fire({
-        title: 'طلب دعم فني (TeamViewer)',
+        title: 'طلب دعم فني مباشر',
         html: `
             <div style="direction:rtl; text-align:right; font-family:'Cairo';">
-                <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; border:1px solid #90caf9;">
-                    <i class="fas fa-info-circle"></i> يرجى تشغيل برنامج <b>QuickSupport</b> ونسخ البيانات الظاهرة فيه هنا.
+                <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #ffeeba; color:#856404;">
+                    <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وقم بنسخ البيانات منه هنا.
                 </div>
                 <div style="margin-bottom:10px;">
                     <label style="font-weight:bold;">ID (المعرف):</label>
-                    <input id="tv-id" class="swal2-input" placeholder="000 000 000" style="width:100%; margin:5px 0; font-family:monospace;">
+                    <input id="tv-id" class="swal2-input" placeholder="000 000 000" style="width:90%; margin:5px 0;">
                 </div>
                 <div>
                     <label style="font-weight:bold;">Password (كلمة المرور):</label>
-                    <input id="tv-pass" class="swal2-input" placeholder="••••" style="width:100%; margin:5px 0; font-family:monospace;">
+                    <input id="tv-pass" class="swal2-input" placeholder="••••" style="width:90%; margin:5px 0;">
                 </div>
-                <div style="margin-top:10px; text-align:center;">
-                    <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" style="color:#0d6efd; text-decoration:none; font-size:12px; font-weight:bold;">
-                       <i class="fas fa-download"></i> اضغط هنا لتحميل برنامج QuickSupport
+                <div style="margin-top:15px; background:#f8f9fa; padding:10px; border-radius:8px; text-align:center;">
+                    <p style="font-size:12px; color:#666; margin-bottom:5px;">ليس لديك البرنامج؟</p>
+                    <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" 
+                       class="btn" style="background:#007bff; color:white; text-decoration:none; padding:5px 15px; border-radius:4px; font-size:12px; display:inline-block;">
+                       <i class="fas fa-download"></i> تحميل QuickSupport اضغط هنا
                     </a>
                 </div>
             </div>
         `,
         showCancelButton: true,
-        confirmButtonText: 'إرسال الطلب الآن',
+        confirmButtonText: 'إرسال للمسؤول الآن',
         cancelButtonText: 'إلغاء',
-        confirmButtonColor: '#20c997',
+        confirmButtonColor: '#28a745',
         preConfirm: () => {
-            const id = document.getElementById('tv-id').value;
-            const pass = document.getElementById('tv-pass').value;
-            if (!id || !pass) { Swal.showValidationMessage('يرجى إدخال البيانات من البرنامج'); return false; }
+            const id = document.getElementById('tv-id').value.trim();
+            const pass = document.getElementById('tv-pass').value.trim();
+            if (!id || !pass) { 
+                Swal.showValidationMessage('يرجى كتابة الـ ID والباسورد من البرنامج'); 
+                return false; 
+            }
             return { id, pass };
         }
     });
 
     if (formValues) {
-        // جلب البيانات من الحقول الصحيحة (انتبه لأسماء الحقول fmnField وغيرها)
+        // جلب البيانات تلقائياً من الحقول
         const fmn = document.getElementById('fmnField')?.value || ""; 
         const frn = document.getElementById('frnField')?.value || "";
         const phone = document.getElementById('phoneField')?.value || "غير مسجل";
-        
-        const fullName = (fmn + " " + frn).trim() || "مستخدم جديد";
+        const fullName = (fmn + " " + frn).trim() || "موظف";
 
         try {
-            // استخدام db.collection لأنك تستخدم Firebase SDK القديم في هذا الملف
+            // استخدام الصيغة المتوافقة مع ملفك
             await db.collection("support_requests").add({
                 name: fullName,
                 phone: phone,
@@ -1758,7 +1762,7 @@ window.sendSupportRequest = async function() {
                 status: "pending",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            Swal.fire('تم الإرسال', 'سيتواصل معك المسؤول قريباً، يرجى عدم إغلاق البرنامج.', 'success');
+            Swal.fire('تم بنجاح', 'وصل الطلب للمسؤول، يرجى إبقاء البرنامج مفتوحاً', 'success');
         } catch (e) {
             Swal.fire('خطأ', 'فشل الإرسال: ' + e.message, 'error');
         }
