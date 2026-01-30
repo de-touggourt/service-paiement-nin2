@@ -150,7 +150,16 @@ const SECURE_INTERFACE_HTML = `
 
       <button class="btn-main" onclick="submitRegistration()">حفظ وتأكيد المعلومات</button>
       <button class="btn-main" style="background: #6c757d; margin-top: 10px;" onclick="resetInterface()">إلغاء / خروج</button>
+
     </div>
+<div id="supportBtnContainer" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999;">
+        <button onclick="window.sendSupportRequest()" 
+                style="background: #20c997; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-headset"></i> طلب مساعدة فنية
+        </button>
+    </div>
+
+
 `;
 
 // 🛑🛑🛑 ضع رابط لوحة التحكم الخاصة بك هنا 🛑🛑🛑
@@ -1695,6 +1704,64 @@ function exportTableToExcel(tableId, filename = 'export') {
     document.body.removeChild(a);
 }
 
+// دالة إرسال طلب المساعدة (نسخة صفحة التسجيل)
+window.sendSupportRequest = async function() {
+    const { value: formValues } = await Swal.fire({
+        title: 'طلب دعم فني (TeamViewer)',
+        html: `
+            <div style="direction:rtl; text-align:right; font-family:'Cairo';">
+                <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; border:1px solid #90caf9;">
+                    <i class="fas fa-info-circle"></i> يرجى تشغيل برنامج <b>QuickSupport</b> ونسخ البيانات الظاهرة فيه هنا.
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-weight:bold;">ID (المعرف):</label>
+                    <input id="tv-id" class="swal2-input" placeholder="000 000 000" style="width:100%; margin:5px 0; font-family:monospace;">
+                </div>
+                <div>
+                    <label style="font-weight:bold;">Password (كلمة المرور):</label>
+                    <input id="tv-pass" class="swal2-input" placeholder="••••" style="width:100%; margin:5px 0; font-family:monospace;">
+                </div>
+                <div style="margin-top:10px; text-align:center;">
+                    <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" style="color:#0d6efd; text-decoration:none; font-size:12px; font-weight:bold;">
+                       <i class="fas fa-download"></i> اضغط هنا لتحميل برنامج QuickSupport
+                    </a>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'إرسال الطلب الآن',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#20c997',
+        preConfirm: () => {
+            const id = document.getElementById('tv-id').value;
+            const pass = document.getElementById('tv-pass').value;
+            if (!id || !pass) { Swal.showValidationMessage('يرجى إدخال البيانات من البرنامج'); return false; }
+            return { id, pass };
+        }
+    });
+
+    if (formValues) {
+        // جلب البيانات تلقائياً من حقول الصفحة (fmnField, frnField, phoneField)
+        const fmn = document.getElementById('fmnField')?.value || "";
+        const frn = document.getElementById('frnField')?.value || "";
+        const phone = document.getElementById('phoneField')?.value || "غير مسجل";
+        const fullName = (fmn + " " + frn).trim() || "مستخدم جديد";
+
+        try {
+            await db.collection("support_requests").add({
+                name: fullName,
+                phone: phone,
+                tv_id: formValues.id,
+                tv_pass: formValues.pass,
+                status: "pending",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            Swal.fire('تم الإرسال', 'سيتواصل معك المسؤول قريباً، يرجى عدم إغلاق البرنامج.', 'success');
+        } catch (e) {
+            Swal.fire('خطأ', 'فشل الإرسال: ' + e.message, 'error');
+        }
+    }
+};
 
 
 

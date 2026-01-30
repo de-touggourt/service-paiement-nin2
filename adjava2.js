@@ -1,6 +1,5 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
 // --- إعدادات Firebase ---
@@ -149,6 +148,13 @@ const SECURE_DASHBOARD_HTML = `
       <button class="btn btn-pending-list" style="background-color:#6f42c1; color:white;" onclick="window.openPendingListModal()">قائمة الغير مؤكدة<i class="fas fa-clipboard-list"></i></button>
       <button class="btn" style="background-color:#FF00AA; color:white;" onclick="window.checkNonRegistered()">تقرير التسجيل<i class="fas fa-clipboard-list"></i></button>
       <button class="btn" style="background-color:#0d6efd; color:white;" onclick="window.openBatchPrintModal()">طباعة الاستمارات<i class="fas fa-print"></i></button>
+
+<button class="btn" style="background-color:#20c997; color:white; position:relative;" onclick="window.openSupportRequestsModal()">
+    طلبات المساعدة 
+    <span id="supportBadge" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; padding:2px 6px; font-size:10px; display:none; border:1px solid white;">0</span>
+    <i class="fas fa-headset"></i>
+</button>
+
     </div>
 
     <div style="background-color:#f1f3f5; padding:12px; border-radius:8px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:15px; border:1px solid #dee2e6;">
@@ -306,6 +312,7 @@ window.verifyAdminLogin = async function() {
                     document.getElementById("loginOverlay").style.display = "none";
                     container.classList.add("visible");
                     window.loadData();
+                    window.startSupportListener();
                 }, 500);
 
                 const Toast = Swal.mixin({
@@ -2846,5 +2853,144 @@ window.deleteFirebaseDoc = function(id) {
             }
         }
     });
+};
+
+
+// ==========================================
+// 🛠️ نظام الدعم الفني (TeamViewer QuickSupport)
+// ==========================================
+
+// 1. مراقب الطلبات النشط (يتم تشغيله عند دخول المسؤول)
+window.startSupportListener = function() {
+    const q = query(collection(db, "support_requests"), where("status", "==", "pending"));
+    onSnapshot(q, (snapshot) => {
+        const badge = document.getElementById("supportBadge");
+        if (badge) {
+            if (snapshot.size > 0) {
+                badge.innerText = snapshot.size;
+                badge.style.display = "block";
+            } else {
+                badge.style.display = "none";
+            }
+        }
+    });
+};
+
+// 2. نافذة إرسال الطلب (توضع في صفحة التسجيل للموظف)
+window.sendSupportRequest = async function() {
+    const { value: formValues } = await Swal.fire({
+        title: 'طلب دعم فني (QuickSupport)',
+        html: `
+            <div style="direction:rtl; text-align:right; font-family:'Cairo';">
+                <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9;">
+                    <i class="fas fa-info-circle"></i> يرجى تشغيل برنامج <b>QuickSupport</b> ونسخ البيانات الظاهرة فيه.
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-weight:bold;">ID (المعرف):</label>
+                    <input id="tv-id" class="swal2-input" placeholder="000 000 000" style="width:100%; margin:5px 0;">
+                </div>
+                <div>
+                    <label style="font-weight:bold;">Password (كلمة المرور):</label>
+                    <input id="tv-pass" class="swal2-input" placeholder="••••" style="width:100%; margin:5px 0;">
+                </div>
+                <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" 
+                   style="display:block; text-align:center; margin-top:15px; color:#1189cf; text-decoration:none; font-size:12px; font-weight:bold;">
+                    <i class="fas fa-download"></i> تحميل برنامج QuickSupport إذا لم يكن لديك
+                </a>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'إرسال للمسؤول',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#20c997',
+        preConfirm: () => {
+            const id = document.getElementById('tv-id').value;
+            const pass = document.getElementById('tv-pass').value;
+            if (!id || !pass) { Swal.showValidationMessage('يرجى إدخال البيانات المطلوبة'); return false; }
+            return { id, pass };
+        }
+    });
+
+    if (formValues) {
+        // محاولة جلب الاسم والهاتف من حقول صفحة التسجيل
+        const nameField = (document.getElementById('fmn')?.value || "") + " " + (document.getElementById('frn')?.value || "");
+        const phoneField = document.getElementById('phone')?.value || "غير محدد";
+
+        try {
+            await addDoc(collection(db, "support_requests"), {
+                name: nameField.trim() || "مستخدم جديد",
+                phone: phoneField,
+                tv_id: formValues.id,
+                tv_pass: formValues.pass,
+                status: "pending",
+                timestamp: new Date()
+            });
+            Swal.fire('تم الإرسال', 'انتظر قليلاً، المسؤول سيتصل بجهازك الآن', 'success');
+        } catch (e) {
+            Swal.fire('خطأ', 'فشل الإرسال: ' + e.message, 'error');
+        }
+    }
+};
+
+// 3. نافذة عرض الطلبات للمسؤول (لوحة التحكم)
+window.openSupportRequestsModal = async function() {
+    const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
+    const snapshot = await getDocs(q);
+    
+    let tableRows = "";
+    snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        tableRows += `
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:12px;"><b>${d.name}</b><br><small style="color:#666;">${d.phone}</small></td>
+                <td style="padding:12px; color:#0d6efd; font-weight:bold; font-family:monospace; font-size:16px;">${d.tv_id}</td>
+                <td style="padding:12px; background:#fff3cd; font-weight:bold; font-family:monospace;">${d.tv_pass}</td>
+                <td style="padding:12px; text-align:center;">
+                    <button onclick="window.location.href='teamviewerapi://control?device=${d.tv_id}'" 
+                            class="btn" style="background:#28a745; color:white; padding:5px 10px; font-size:12px;">اتصال <i class="fas fa-play"></i></button>
+                    <button onclick="window.closeSupportRequest('${docSnap.id}')" 
+                            class="btn" style="background:#dc3545; color:white; padding:5px 10px; font-size:12px; margin-top:2px;">إنهاء</button>
+                </td>
+            </tr>`;
+    });
+
+    Swal.fire({
+        title: 'قائمة طلبات الدعم الفني المباشر',
+        width: '800px',
+        html: `
+            <table style="width:100%; direction:rtl; text-align:right; font-size:14px; border-collapse:collapse;">
+                <thead style="background:#2c3e50; color:white;">
+                    <tr>
+                        <th style="padding:10px;">الموظف</th>
+                        <th style="padding:10px;">ID المعرف</th>
+                        <th style="padding:10px;">كلمة المرور</th>
+                        <th style="padding:10px; text-align:center;">الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows || '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">لا توجد طلبات مساعدة نشطة حالياً</td></tr>'}
+                </tbody>
+            </table>
+        `,
+        showConfirmButton: false,
+        showCloseButton: true
+    });
+};
+
+// 4. إنهاء وحذف الطلب من القائمة
+window.closeSupportRequest = async function(id) {
+    const result = await Swal.fire({
+        title: 'تأكيد الإنهاء',
+        text: "هل تم حل المشكلة وتريد إزالة الطلب من القائمة؟",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، إزالة',
+        cancelButtonText: 'تراجع'
+    });
+
+    if (result.isConfirmed) {
+        await deleteDoc(doc(db, "support_requests", id));
+        window.openSupportRequestsModal();
+    }
 };
 
