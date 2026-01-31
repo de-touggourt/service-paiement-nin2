@@ -1705,66 +1705,198 @@ function exportTableToExcel(tableId, filename = 'export') {
 }
 
 // دالة إرسال طلب المساعدة (TeamViewer)
+// ============================================================
+// دالة إرسال طلب المساعدة (TeamViewer) - معدلة وشاملة
+// ============================================================
 window.sendSupportRequest = async function() {
-    const { value: formValues } = await Swal.fire({
-        title: 'طلب دعم فني مباشر',
-        html: `
-            <div style="direction:rtl; text-align:right; font-family:'Cairo';">
-                <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #ffeeba; color:#856404;">
-                    <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وقم بنسخ البيانات منه هنا.
+    const htmlForm = `
+        <div style="direction:rtl; text-align:right; font-family:'Cairo', sans-serif;">
+            
+            <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9; color:#0d47a1; text-align:center;">
+                <i class="fas fa-info-circle"></i> يرجى ملء بيانات المدير والمؤسسة لتسهيل عملية الدعم
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">الاسم واللقب الكامل</label>
+                    <input id="sup-name" class="swal2-input" placeholder="اسم المدير(ة)" style="width:100%; margin:5px 0; height:35px; font-size:13px;">
                 </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-weight:bold;">ID (المعرف):</label>
-                    <input id="tv-id" class="swal2-input" placeholder="000 000 000" style="width:90%; margin:5px 0;">
-                </div>
-                <div>
-                    <label style="font-weight:bold;">Password (كلمة المرور):</label>
-                    <input id="tv-pass" class="swal2-input" placeholder="••••" style="width:90%; margin:5px 0;">
-                </div>
-                <div style="margin-top:15px; background:#f8f9fa; padding:10px; border-radius:8px; text-align:center;">
-                    <p style="font-size:12px; color:#666; margin-bottom:5px;">ليس لديك البرنامج؟</p>
-                    <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" 
-                       class="btn" style="background:#007bff; color:white; text-decoration:none; padding:5px 15px; border-radius:4px; font-size:12px; display:inline-block;">
-                       <i class="fas fa-download"></i> تحميل QuickSupport اضغط هنا
-                    </a>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">رقم الهاتف</label>
+                    <input id="sup-phone" class="swal2-input" placeholder="06XXXXXXXX" maxlength="10" style="width:100%; margin:5px 0; height:35px; font-size:13px; direction:ltr; text-align:right;">
                 </div>
             </div>
-        `,
+
+            <div style="margin-bottom:10px;">
+                <label style="font-size:12px; font-weight:bold;">الطور التعليمي</label>
+                <select id="sup-level" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                    <option value="">-- اختر الطور --</option>
+                    <option value="ابتدائي">ابتدائي</option>
+                    <option value="متوسط">متوسط</option>
+                    <option value="ثانوي">ثانوي</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">الدائرة</label>
+                    <select id="sup-daaira" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                        <option value="">-- اختر --</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">البلدية</label>
+                    <select id="sup-baladiya" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                        <option value="">-- اختر --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold;">المؤسسة</label>
+                <select id="sup-school" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                    <option value="">-- يرجى اختيار الطور والبلدية أولاً --</option>
+                </select>
+            </div>
+
+            <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
+
+            <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px; border:1px solid #ffeeba; color:#856404;">
+                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وانسخ البيانات:
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                 <div style="flex:1;">
+                    <label style="font-weight:bold; font-size:12px;">ID (المعرف)</label>
+                    <input id="tv-id" class="swal2-input" placeholder="123 456 789" style="width:100%; margin:5px 0; height:35px; direction:ltr;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-weight:bold; font-size:12px;">Password</label>
+                    <input id="tv-pass" class="swal2-input" placeholder="****" style="width:100%; margin:5px 0; height:35px; direction:ltr;">
+                </div>
+            </div>
+
+            <div style="margin-top:10px; text-align:center;">
+                <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" target="_blank"
+                   style="color:#007bff; text-decoration:none; font-size:12px;">
+                   <i class="fas fa-download"></i> تحميل برنامج TeamViewer QS
+                </a>
+            </div>
+        </div>
+    `;
+
+    const { value: formValues } = await Swal.fire({
+        title: 'طلب دعم فني مباشر',
+        html: htmlForm,
+        width: '500px',
         showCancelButton: true,
-        confirmButtonText: 'إرسال للمسؤول الآن',
+        confirmButtonText: 'إرسال الطلب',
         cancelButtonText: 'إلغاء',
         confirmButtonColor: '#28a745',
-        preConfirm: () => {
-            const id = document.getElementById('tv-id').value.trim();
-            const pass = document.getElementById('tv-pass').value.trim();
-            if (!id || !pass) { 
-                Swal.showValidationMessage('يرجى كتابة الـ ID والباسورد من البرنامج'); 
-                return false; 
+        cancelButtonColor: '#d33',
+        didOpen: () => {
+            // -- منطق تعبئة القوائم (نفس منطق الاستمارات) --
+            const levelSel = document.getElementById('sup-level');
+            const daairaSel = document.getElementById('sup-daaira');
+            const baladiyaSel = document.getElementById('sup-baladiya');
+            const schoolSel = document.getElementById('sup-school');
+
+            // 1. تعبئة الدوائر
+            if(window.baladiyaMap) {
+                Object.keys(window.baladiyaMap).forEach(d => {
+                    daairaSel.add(new Option(d, d));
+                });
             }
-            return { id, pass };
+
+            // تحديث البلديات عند تغيير الدائرة
+            daairaSel.addEventListener('change', () => {
+                baladiyaSel.innerHTML = '<option value="">-- اختر --</option>';
+                schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
+                
+                if(daairaSel.value && window.baladiyaMap[daairaSel.value]) {
+                    window.baladiyaMap[daairaSel.value].forEach(b => {
+                        baladiyaSel.add(new Option(b, b));
+                    });
+                }
+                updateSchools();
+            });
+
+            // دالة تحديث المدارس
+            function updateSchools() {
+                schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
+                const lvl = levelSel.value;
+                const daaira = daairaSel.value;
+                const baladiya = baladiyaSel.value;
+
+                if(!lvl) return;
+
+                let options = [];
+
+                if (lvl === 'ابتدائي') {
+                    if (baladiya && window.primarySchoolsByBaladiya && window.primarySchoolsByBaladiya[baladiya]) {
+                        options = window.primarySchoolsByBaladiya[baladiya];
+                    }
+                } else if (lvl === 'متوسط' || lvl === 'ثانوي') {
+                    if (daaira && window.institutionsByDaaira && window.institutionsByDaaira[daaira] && window.institutionsByDaaira[daaira][lvl]) {
+                        options = window.institutionsByDaaira[daaira][lvl];
+                    }
+                }
+
+                options.forEach(item => {
+                    schoolSel.add(new Option(item.name, item.name));
+                });
+            }
+
+            baladiyaSel.addEventListener('change', updateSchools);
+            levelSel.addEventListener('change', updateSchools);
+        },
+        preConfirm: () => {
+            const name = document.getElementById('sup-name').value.trim();
+            const phone = document.getElementById('sup-phone').value.trim();
+            const level = document.getElementById('sup-level').value;
+            const daaira = document.getElementById('sup-daaira').value;
+            const baladiya = document.getElementById('sup-baladiya').value;
+            const school = document.getElementById('sup-school').value;
+            const tvId = document.getElementById('tv-id').value.trim();
+            const tvPass = document.getElementById('tv-pass').value.trim();
+
+            if (!name || !phone || !school || !tvId || !tvPass) {
+                Swal.showValidationMessage('يرجى ملء جميع الحقول المطلوبة (الاسم، الهاتف، المؤسسة، وبيانات تيم فيور)');
+                return false;
+            }
+
+            return { name, phone, level, daaira, baladiya, school, tvId, tvPass };
         }
     });
 
     if (formValues) {
-        // جلب البيانات تلقائياً من الحقول
-        const fmn = document.getElementById('fmnField')?.value || ""; 
-        const frn = document.getElementById('frnField')?.value || "";
-        const phone = document.getElementById('phoneField')?.value || "غير مسجل";
-        const fullName = (fmn + " " + frn).trim() || "موظف";
-
+        Swal.fire({ title: 'جاري الإرسال...', didOpen:()=>Swal.showLoading() });
+        
         try {
-            // استخدام الصيغة المتوافقة مع ملفك
             await db.collection("support_requests").add({
-                name: fullName,
-                phone: phone,
-                tv_id: formValues.id,
-                tv_pass: formValues.pass,
-                status: "pending",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                director_name: formValues.name,
+                phone: formValues.phone,
+                level: formValues.level,
+                daaira: formValues.daaira,
+                baladiya: formValues.baladiya,
+                school_name: formValues.school, // الاسم الكامل للمؤسسة
+                tv_id: formValues.tvId,
+                tv_pass: formValues.tvPass,
+                status: "pending", // حالة الطلب
+                created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                app_version: "2.0"
             });
-            Swal.fire('تم بنجاح', 'وصل الطلب للمسؤول، يرجى إبقاء البرنامج مفتوحاً', 'success');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'تم إرسال الطلب بنجاح',
+                text: 'سيقوم المسؤول بالاتصال بك عبر البرنامج قريباً، يرجى إبقاء النافذة مفتوحة.',
+                confirmButtonText: 'حسناً'
+            });
+
         } catch (e) {
-            Swal.fire('خطأ', 'فشل الإرسال: ' + e.message, 'error');
+            console.error(e);
+            Swal.fire('خطأ', 'فشل إرسال الطلب، تأكد من الاتصال بالإنترنت', 'error');
         }
     }
 };
