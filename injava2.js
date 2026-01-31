@@ -1762,7 +1762,14 @@ window.sendSupportRequest = async function() {
             <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
 
             <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px; border:1px solid #ffeeba; color:#856404;">
-                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وانسخ البيانات:
+                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>TeamViewer</b> وانسخ البيانات:
+            </div>
+
+            <div style="text-align:center; margin-bottom:15px;">
+                <button type="button" onclick="window.handleTVAction()" 
+                        style="background:#007bff; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; width:100%;">
+                    <i class="fas fa-external-link-alt"></i> فتح البرنامج أو تحميله (إذا لم يكن لديك)
+                </button>
             </div>
             
             <div style="display:flex; gap:10px;">
@@ -1775,33 +1782,41 @@ window.sendSupportRequest = async function() {
                     <input id="tv-pass" class="swal2-input" placeholder="****" style="width:100%; margin:5px 0; height:35px; direction:ltr;">
                 </div>
             </div>
-
-            <div style="margin-top:10px; text-align:center;">
-                <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" target="_blank"
-                   style="color:#007bff; text-decoration:none; font-size:12px;">
-                   <i class="fas fa-download"></i> تحميل برنامج TeamViewer QS
-                </a>
-            </div>
         </div>
     `;
+
+    // دالة التعامل مع فتح أو تحميل تيم فيور
+    window.handleTVAction = function() {
+        const tvUrl = "teamviewer10://"; // بروتوكول التشغيل
+        const downloadUrl = "https://download.teamviewer.com/download/TeamViewerQS.exe";
+        
+        const start = Date.now();
+        window.location.href = tvUrl;
+
+        setTimeout(() => {
+            if (Date.now() - start < 1500) {
+                Swal.showValidationMessage('البرنامج غير مثبت، سيبدأ التحميل الآن...');
+                window.open(downloadUrl, '_blank');
+            }
+        }, 1000);
+    };
 
     const { value: formValues } = await Swal.fire({
         title: 'طلب دعم فني مباشر',
         html: htmlForm,
         width: '500px',
         showCancelButton: true,
-        confirmButtonText: 'إرسال الطلب',
+        confirmButtonText: 'إرسال الطلب الآن',
         cancelButtonText: 'إلغاء',
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#d33',
         didOpen: () => {
-            // -- منطق تعبئة القوائم (نفس منطق الاستمارات) --
             const levelSel = document.getElementById('sup-level');
             const daairaSel = document.getElementById('sup-daaira');
             const baladiyaSel = document.getElementById('sup-baladiya');
             const schoolSel = document.getElementById('sup-school');
 
-            // 1. تعبئة الدوائر
+            // 1. تعبئة الدوائر من الخريطة الموجودة في الكود
             if(window.baladiyaMap) {
                 Object.keys(window.baladiyaMap).forEach(d => {
                     daairaSel.add(new Option(d, d));
@@ -1811,8 +1826,6 @@ window.sendSupportRequest = async function() {
             // تحديث البلديات عند تغيير الدائرة
             daairaSel.addEventListener('change', () => {
                 baladiyaSel.innerHTML = '<option value="">-- اختر --</option>';
-                schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
-                
                 if(daairaSel.value && window.baladiyaMap[daairaSel.value]) {
                     window.baladiyaMap[daairaSel.value].forEach(b => {
                         baladiyaSel.add(new Option(b, b));
@@ -1821,7 +1834,7 @@ window.sendSupportRequest = async function() {
                 updateSchools();
             });
 
-            // دالة تحديث المدارس
+            // دالة تحديث المدارس بناءً على الطور والبلدية/الدائرة
             function updateSchools() {
                 schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
                 const lvl = levelSel.value;
@@ -1831,12 +1844,13 @@ window.sendSupportRequest = async function() {
                 if(!lvl) return;
 
                 let options = [];
-
                 if (lvl === 'ابتدائي') {
+                    // الابتدائي مرتبط بالبلدية
                     if (baladiya && window.primarySchoolsByBaladiya && window.primarySchoolsByBaladiya[baladiya]) {
                         options = window.primarySchoolsByBaladiya[baladiya];
                     }
-                } else if (lvl === 'متوسط' || lvl === 'ثانوي') {
+                } else {
+                    // المتوسط والثانوي مرتبط بالدائرة
                     if (daaira && window.institutionsByDaaira && window.institutionsByDaaira[daaira] && window.institutionsByDaaira[daaira][lvl]) {
                         options = window.institutionsByDaaira[daaira][lvl];
                     }
@@ -1851,27 +1865,27 @@ window.sendSupportRequest = async function() {
             levelSel.addEventListener('change', updateSchools);
         },
         preConfirm: () => {
-            const name = document.getElementById('sup-name').value.trim();
-            const phone = document.getElementById('sup-phone').value.trim();
-            const level = document.getElementById('sup-level').value;
-            const daaira = document.getElementById('sup-daaira').value;
-            const baladiya = document.getElementById('sup-baladiya').value;
-            const school = document.getElementById('sup-school').value;
-            const tvId = document.getElementById('tv-id').value.trim();
-            const tvPass = document.getElementById('tv-pass').value.trim();
+            const data = {
+                name: document.getElementById('sup-name').value.trim(),
+                phone: document.getElementById('sup-phone').value.trim(),
+                level: document.getElementById('sup-level').value,
+                daaira: document.getElementById('sup-daaira').value,
+                baladiya: document.getElementById('sup-baladiya').value,
+                school: document.getElementById('sup-school').value,
+                tvId: document.getElementById('tv-id').value.trim(),
+                tvPass: document.getElementById('tv-pass').value.trim()
+            };
 
-            if (!name || !phone || !school || !tvId || !tvPass) {
-                Swal.showValidationMessage('يرجى ملء جميع الحقول المطلوبة (الاسم، الهاتف، المؤسسة، وبيانات تيم فيور)');
+            if (!data.name || !data.phone || !data.school || !data.tvId || !data.tvPass) {
+                Swal.showValidationMessage('يرجى ملء كافة البيانات المطلوبة');
                 return false;
             }
-
-            return { name, phone, level, daaira, baladiya, school, tvId, tvPass };
+            return data;
         }
     });
 
     if (formValues) {
         Swal.fire({ title: 'جاري الإرسال...', didOpen:()=>Swal.showLoading() });
-        
         try {
             await db.collection("support_requests").add({
                 director_name: formValues.name,
@@ -1879,24 +1893,16 @@ window.sendSupportRequest = async function() {
                 level: formValues.level,
                 daaira: formValues.daaira,
                 baladiya: formValues.baladiya,
-                school_name: formValues.school, // الاسم الكامل للمؤسسة
+                school_name: formValues.school,
                 tv_id: formValues.tvId,
                 tv_pass: formValues.tvPass,
-                status: "pending", // حالة الطلب
-                created_at: firebase.firestore.FieldValue.serverTimestamp(),
-                app_version: "2.0"
+                status: "pending",
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            Swal.fire({
-                icon: 'success',
-                title: 'تم إرسال الطلب بنجاح',
-                text: 'سيقوم المسؤول بالاتصال بك عبر البرنامج قريباً، يرجى إبقاء النافذة مفتوحة.',
-                confirmButtonText: 'حسناً'
-            });
-
+            Swal.fire('تم بنجاح', 'سيتصل بك الدعم الفني فوراً، يرجى تشغيل البرنامج', 'success');
         } catch (e) {
-            console.error(e);
-            Swal.fire('خطأ', 'فشل إرسال الطلب، تأكد من الاتصال بالإنترنت', 'error');
+            Swal.fire('خطأ', 'فشل في إرسال الطلب', 'error');
         }
     }
 };
