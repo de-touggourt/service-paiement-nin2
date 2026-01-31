@@ -1787,7 +1787,7 @@ window.sendSupportRequest = async function() {
 
     // دالة التعامل مع فتح أو تحميل تيم فيور
     window.handleTVAction = function() {
-        const tvUrl = "teamviewer10://"; // بروتوكول التشغيل
+        const tvUrl = "teamviewer8://"; // بروتوكول التشغيل
         const downloadUrl = "https://download.teamviewer.com/download/TeamViewerQS.exe";
         
         const start = Date.now();
@@ -1906,3 +1906,4 @@ window.sendSupportRequest = async function() {
         }
     }
 };
+
