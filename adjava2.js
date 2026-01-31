@@ -2908,57 +2908,114 @@ window.connectToTeamViewer = function(id, pass) {
     });
 };
 
+
 // ==========================================
-// 📋 نافذة عرض الطلبات (تحديث الدالة)
+// 📋 نافذة عرض الطلبات (محدثة بالحقول الجديدة وتاريخ السيرفر)
 // ==========================================
 window.openSupportRequestsModal = async function() {
     try {
-        const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
+        // ترتيب حسب حقل created_at الجديد
+        const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("created_at", "desc"));
         const snapshot = await getDocs(q);
         
         let tableRows = "";
+        
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
-            // لاحظ التغيير في زر الاتصال أدناه 👇
+            
+            // تنسيق التاريخ من طابع السيرفر (Timestamp)
+            let dateStr = "---";
+            if (d.created_at && typeof d.created_at.toDate === 'function') {
+                dateStr = window.fmtDateTime(d.created_at.toDate());
+            }
+
+            // تحديد لون شارة الطور
+            let levelBadgeColor = "#6c757d"; // رمادي افتراضي
+            if(d.level === "ابتدائي") levelBadgeColor = "#28a745"; // أخضر
+            else if(d.level === "متوسط") levelBadgeColor = "#fd7e14"; // برتقالي
+            else if(d.level === "ثانوي") levelBadgeColor = "#007bff"; // أزرق
+
             tableRows += `
-                <tr style="border-bottom:1px solid #eee;">
-                    <td style="padding:12px;"><b>${d.name}</b><br><small style="color:#666;">${d.phone}</small></td>
-                    <td style="padding:12px; color:#0d6efd; font-weight:bold; font-family:monospace; font-size:16px;">${d.tv_id}</td>
-                    <td style="padding:12px; background:#fff3cd; font-weight:bold; font-family:monospace;">${d.tv_pass}</td>
-                    <td style="padding:12px; text-align:center;">
+                <tr style="border-bottom:1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+                    
+                    <td style="padding:10px; font-size:11px; color:#555; white-space:nowrap;">
+                        <i class="far fa-clock"></i> ${dateStr}
+                    </td>
+
+                    <td style="padding:10px;">
+                        <div style="font-weight:bold; color:#2c3e50; font-size:13px;">${d.director_name || 'غير محدد'}</div>
+                        <div style="font-size:12px; color:#666; margin-top:2px;">
+                            <i class="fas fa-phone-alt" style="font-size:10px;"></i> <span dir="ltr">${d.phone || '---'}</span>
+                        </div>
+                    </td>
+
+                    <td style="padding:10px;">
+                        <div style="font-weight:bold; font-size:12px; color:#000;">${d.school_name || '---'}</div>
+                        <div style="margin-top:4px;">
+                            <span style="background-color:${levelBadgeColor}; color:white; padding:1px 6px; border-radius:4px; font-size:10px;">${d.level || '-'}</span>
+                            <span style="font-size:11px; color:#555; margin-right:5px;">(${d.daaira || ''} / ${d.baladiya || ''})</span>
+                        </div>
+                    </td>
+
+                    <td style="padding:10px;">
+                         <div style="display:flex; align-items:center; gap:5px; margin-bottom:3px;">
+                            <span style="font-size:11px; color:#666; width:25px;">ID:</span>
+                            <span style="font-family:monospace; color:#0d6efd; font-weight:bold; font-size:14px; letter-spacing:1px;">${d.tv_id}</span>
+                         </div>
+                         <div style="display:flex; align-items:center; gap:5px;">
+                            <span style="font-size:11px; color:#666; width:25px;">PW:</span>
+                            <span style="font-family:monospace; background:#fff3cd; padding:1px 6px; border-radius:3px; font-weight:bold; border:1px solid #ffeeba;">${d.tv_pass}</span>
+                         </div>
+                    </td>
+
+                    <td style="padding:10px; text-align:center; vertical-align:middle;">
                         <button onclick="window.connectToTeamViewer('${d.tv_id}', '${d.tv_pass}')" 
-                                class="btn" style="background:#28a745; color:white; padding:5px 15px; font-size:12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                                class="btn" style="background:#28a745; color:white; padding:6px 12px; font-size:12px; border:none; border-radius:50px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 5px rgba(40,167,69,0.2);">
                             <i class="fas fa-bolt"></i> اتصال
                         </button>
                         <button onclick="window.closeSupportRequest('${docSnap.id}')" 
-                                class="btn" style="background:#dc3545; color:white; padding:5px 10px; font-size:12px; margin-top:2px; border:none; border-radius:4px; cursor:pointer;">إنهاء</button>
+                                class="btn" style="background:#fff; color:#dc3545; border:1px solid #dc3545; padding:5px 10px; font-size:11px; margin-top:5px; border-radius:50px; cursor:pointer;">
+                            <i class="fas fa-times"></i> إنهاء
+                        </button>
                     </td>
                 </tr>`;
         });
 
+        const noDataHtml = `
+            <tr>
+                <td colspan="5" style="text-align:center; padding:40px; color:#999;">
+                    <i class="fas fa-check-circle" style="font-size:40px; margin-bottom:10px; color:#e9ecef;"></i><br>
+                    لا توجد طلبات مساعدة نشطة حالياً
+                </td>
+            </tr>`;
+
         Swal.fire({
-            title: 'قائمة طلبات الدعم الفني المباشر',
-            width: '800px',
+            title: '<div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-headset" style="color:#0d6efd;"></i> طلبات الدعم الفني الواردة</div>',
+            width: '1000px',
             html: `
-                <table style="width:100%; direction:rtl; text-align:right; font-size:14px; border-collapse:collapse;">
-                    <thead style="background:#2c3e50; color:white;">
-                        <tr>
-                            <th style="padding:10px;">الموظف</th>
-                            <th style="padding:10px;">ID المعرف</th>
-                            <th style="padding:10px;">كلمة المرور</th>
-                            <th style="padding:10px; text-align:center;">الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableRows || '<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">لا توجد طلبات مساعدة نشطة حالياً</td></tr>'}
-                    </tbody>
-                </table>
-                <div style="margin-top:10px; font-size:12px; color:#666; text-align:center;">
-                    <i class="fas fa-info-circle"></i> عند الضغط على "اتصال"، سيتم نسخ كلمة المرور تلقائياً. قم بعمل <b>Laste (لصق)</b> في البرنامج.
+                <div style="border:1px solid #dee2e6; border-radius:8px; overflow:hidden;">
+                    <table style="width:100%; direction:rtl; text-align:right; font-size:14px; border-collapse:collapse;">
+                        <thead style="background:#f8f9fa; color:#495057; border-bottom:2px solid #dee2e6;">
+                            <tr>
+                                <th style="padding:12px; width:120px;">وقت الطلب</th>
+                                <th style="padding:12px; width:200px;">معلومات المدير</th>
+                                <th style="padding:12px;">المؤسسة والموقع</th>
+                                <th style="padding:12px; width:180px;">بيانات TeamViewer</th>
+                                <th style="padding:12px; width:100px; text-align:center;">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody style="background:white;">
+                            ${tableRows || noDataHtml}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:15px; background:#e3f2fd; padding:10px; border-radius:6px; font-size:12px; color:#0d47a1; text-align:center; border:1px solid #bbdefb;">
+                    <i class="fas fa-info-circle"></i> <b>نصيحة:</b> اضغط زر "اتصال" لفتح البرنامج ونسخ كلمة المرور تلقائياً.
                 </div>
             `,
             showConfirmButton: false,
-            showCloseButton: true
+            showCloseButton: true,
+            customClass: { popup: 'swal-wide' }
         });
     } catch (error) {
         console.error("Error fetching support requests:", error);
