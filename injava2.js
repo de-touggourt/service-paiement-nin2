@@ -1752,7 +1752,7 @@ window.sendSupportRequest = async function() {
 };
 
 
-   // --- 2. وظائف التحكم في TeamViewer ---
+  // --- 2. وظائف التحكم في TeamViewer ---
     window.openTV = function() {
         window.location.href = "teamviewer8://";
     };
