@@ -1752,7 +1752,16 @@ window.sendSupportRequest = async function() {
 };
 
 
-    // --- 2. تصميم واجهة النافذة (HTML) ---
+   // --- 2. وظائف التحكم في TeamViewer ---
+    window.openTV = function() {
+        window.location.href = "teamviewer8://";
+    };
+
+    window.downloadTV = function() {
+        window.open("https://download.teamviewer.com/download/TeamViewerQS.exe", '_blank');
+    };
+
+    // --- 3. تصميم واجهة النافذة (HTML المعدل) ---
     const htmlForm = `
         <div style="direction:rtl; text-align:right; font-family:'Cairo', sans-serif;">
             <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9; color:#0d47a1; text-align:center;">
@@ -1805,13 +1814,17 @@ window.sendSupportRequest = async function() {
             <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
 
             <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px; border:1px solid #ffeeba; color:#856404;">
-                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وانسخ البيانات:
+                <i class="fas fa-desktop"></i> بيانات برنامج <b>QuickSupport</b> :
             </div>
 
-            <div style="text-align:center; margin-bottom:15px;">
-                <button type="button" onclick="window.handleTVAction()" 
-                        style="background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; width:100%;">
-                    <i class="fas fa-external-link-alt"></i> فتح البرنامج أو تحميله الآن
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button type="button" onclick="window.openTV()" 
+                        style="flex:1; background:#007bff; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:11px;">
+                    <i class="fas fa-play"></i> تشغيل البرنامج
+                </button>
+                <button type="button" onclick="window.downloadTV()" 
+                        style="flex:1; background:#6c757d; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:11px;">
+                    <i class="fas fa-download"></i> تحميل البرنامج
                 </button>
             </div>
             
@@ -1828,28 +1841,11 @@ window.sendSupportRequest = async function() {
         </div>
     `;
 
-    // --- 3. وظيفة الزر الذكي (فتح أو تحميل) ---
-    window.handleTVAction = function() {
-        const tvUrl = "teamviewer8://"; 
-        const downloadUrl = "https://download.teamviewer.com/download/TeamViewerQS.exe";
-        
-        const start = Date.now();
-        window.location.href = tvUrl; // محاولة فتح البرنامج إذا كان موجوداً
-
-        setTimeout(() => {
-            // إذا لم يفتح البرنامج (بقي المستخدم في الصفحة)، نقوم بالتحميل
-            if (Date.now() - start < 1500) {
-                Swal.showValidationMessage('جاري تحميل البرنامج.. يرجى الضغط عليه لتشغيله بعد اكتمال التحميل');
-                window.open(downloadUrl, '_blank');
-            }
-        }, 1000);
-    };
-
-    // --- 4. تشغيل النافذة ومنطق الربط بين القوائم ---
+    // --- 4. تشغيل النافذة ومنطق الربط (نفس المنطق السابق مع بعض التحسينات) ---
     const { value: formValues } = await Swal.fire({
         title: 'طلب دعم فني مباشر',
         html: htmlForm,
-        width: '500px',
+        width: '550px',
         showCancelButton: true,
         confirmButtonText: 'إرسال الطلب الآن',
         cancelButtonText: 'إلغاء',
@@ -1860,12 +1856,10 @@ window.sendSupportRequest = async function() {
             const baladiyaSel = document.getElementById('sup-baladiya');
             const schoolSel = document.getElementById('sup-school');
 
-            // تعبئة الدوائر
             Object.keys(baladiyaMap).forEach(d => {
                 daairaSel.add(new Option(d, d));
             });
 
-            // تحديث البلديات عند تغيير الدائرة
             daairaSel.addEventListener('change', () => {
                 baladiyaSel.innerHTML = '<option value="">-- اختر --</option>';
                 const selectedDaaira = daairaSel.value;
@@ -1877,24 +1871,18 @@ window.sendSupportRequest = async function() {
                 updateSchools();
             });
 
-            // دالة تحديث المؤسسات
             function updateSchools() {
                 schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
                 const lvl = levelSel.value;
                 const daaira = daairaSel.value;
                 const baladiya = baladiyaSel.value;
-
                 if(!lvl) return;
 
                 let options = [];
                 if (lvl === 'ابتدائي') {
-                    if (baladiya && primarySchoolsByBaladiya[baladiya]) {
-                        options = primarySchoolsByBaladiya[baladiya];
-                    }
+                    if (baladiya && primarySchoolsByBaladiya[baladiya]) options = primarySchoolsByBaladiya[baladiya];
                 } else {
-                    if (daaira && institutionsByDaaira[daaira] && institutionsByDaaira[daaira][lvl]) {
-                        options = institutionsByDaaira[daaira][lvl];
-                    }
+                    if (daaira && institutionsByDaaira[daaira] && institutionsByDaaira[daaira][lvl]) options = institutionsByDaaira[daaira][lvl];
                 }
 
                 options.forEach(item => {
@@ -1918,14 +1906,14 @@ window.sendSupportRequest = async function() {
             };
 
             if (!data.name || !data.phone || !data.school || !data.tvId || !data.tvPass) {
-                Swal.showValidationMessage('يرجى ملء كافة البيانات المطلوبة قبل الإرسال');
+                Swal.showValidationMessage('يرجى ملء كافة البيانات المطلوبة');
                 return false;
             }
             return data;
         }
     });
 
-    // --- 5. إرسال البيانات إلى Firebase ---
+    // --- 5. إرسال البيانات إلى Firebase (نفس منطقك السابق) ---
     if (formValues) {
         Swal.fire({ title: 'جاري الإرسال...', didOpen:()=>Swal.showLoading() });
         try {
@@ -1941,12 +1929,9 @@ window.sendSupportRequest = async function() {
                 status: "pending",
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            Swal.fire('تم بنجاح', 'وصل طلبك، يرجى إبقاء برنامج TeamViewer مفتوحاً', 'success');
+            Swal.fire('تم بنجاح', 'وصل طلبك، يرجى إبقاء البرنامج مفتوحاً', 'success');
         } catch (e) {
-            console.error(e);
-            Swal.fire('خطأ', 'فشل في إرسال الطلب، يرجى التحقق من الإنترنت', 'error');
+            Swal.fire('خطأ', 'فشل في الإرسال، تحقق من الإنترنت', 'error');
         }
     }
 };
-
