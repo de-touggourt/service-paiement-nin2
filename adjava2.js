@@ -2881,82 +2881,105 @@ window.startSupportListener = function() {
 };
 
 // ==========================================
-// 🛠️ دالة مساعدة لنسخ النصوص (للمعرف وكلمة السر في الجدول)
+// 🛠️ دالة مساعدة لنسخ النصوص (معدلة لتعمل فوق النافذة الحالية)
 // ==========================================
-window.copyData = async function(element, text) {
+window.copyData = async function(text, type) {
     try {
-        // 1. النسخ للحافظة
         await navigator.clipboard.writeText(text);
+        const title = type === 'id' ? 'تم نسخ المعرف' : 'تم نسخ كلمة السر';
         
-        // 2. حفظ الشكل القديم للعنصر
-        const originalHtml = element.innerHTML;
-        const originalStyle = element.getAttribute('style');
+        // تحديد مكان ظهور التنبيه ليكون فوق النافذة الحالية
+        // نتحقق مما إذا كانت هناك نافذة مفتوحة بالفعل
+        const targetContainer = document.querySelector('.swal2-container') || 'body';
 
-        // 3. تغيير الشكل ليدل على النجاح (بدون إغلاق النافذة)
-        element.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
-        element.style.background = '#10b981'; // خلفية خضراء
-        element.style.color = '#ffffff';      // نص أبيض
-        element.style.borderColor = '#10b981';
-        element.style.width = element.offsetWidth + 'px'; // تثبيت العرض لمنع الاهتزاز (اختياري)
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            target: targetContainer, // 👈 هذا هو السطر السحري الذي يمنع إغلاق النافذة
+            customClass: {
+                container: 'toast-on-top' // لضمان ظهورها في الطبقة العليا
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
 
-        // 4. إعادة الشكل الأصلي بعد ثانية ونصف
-        setTimeout(() => {
-            element.innerHTML = originalHtml;
-            element.setAttribute('style', originalStyle);
-        }, 1500);
-
+        Toast.fire({
+            icon: 'success',
+            title: title
+        });
     } catch (err) {
         console.error('فشل النسخ', err);
     }
 };
 
 // ==========================================
-// 🚀 دالة الاتصال الذكي (المعدلة كلياً)
+// 🚀 دالة الاتصال الذكي (معدلة للحفاظ على النافذة مفتوحة)
 // ==========================================
 window.connectToTeamViewer = async function(btn, tvId, tvPass) {
-    const cleanId = tvId.replace(/\s/g, ''); // إزالة الفراغات
+    const cleanId = tvId.replace(/\s/g, ''); 
 
     try {
-        // 1. نسخ المعرف ID إلى الحافظة (بناءً على طلبك)
+        // 1. نسخ المعرف
         await navigator.clipboard.writeText(cleanId);
 
-        // تغيير شكل الزر لحظياً
+        // حفظ نص الزر الأصلي
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الفتح...';
-        btn.style.background = '#3b82f6'; // لون أزرق
+        
+        // تغيير شكل الزر
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> فتح...';
+        btn.style.background = '#3b82f6';
+        btn.disabled = true; // تعطيل الزر مؤقتاً لمنع التكرار
 
-        // 2. محاولة فتح تيم فيور وتمرير المعرف
-        // ملاحظة: هذا البروتوكول يحاول وضع المعرف في خانة الشريك
+        // 2. محاولة فتح البروتوكول
         window.location.href = `teamviewer10://control?device=${cleanId}`;
 
-        // إشعار للمستخدم
+        // تحديد الهدف ليكون النافذة المفتوحة
+        const targetContainer = document.querySelector('.swal2-container') || 'body';
+
+        // 3. عرض التنبيه دون إغلاق النافذة الأم
         Swal.fire({
-            toast: true,
+            toast: true, // مهم جداً أن يكون toast
             position: 'top-end',
             icon: 'success',
-            title: 'تم نسخ المعرف وجاري فتح البرنامج!',
-            text: 'إذا لم يظهر المعرف تلقائياً، قم بلصقه (Ctrl+V)',
+            title: 'جاري فتح TeamViewer',
+            text: 'تم نسخ المعرف للحافظة',
             showConfirmButton: false,
-            timer: 4000
+            timer: 3000,
+            target: targetContainer, // 👈 يمنع إغلاق الجدول
         });
 
-        // إعادة الزر لحالته الطبيعية بعد 3 ثواني
+        // 4. إعادة الزر لحالته الطبيعية
         setTimeout(() => {
             btn.innerHTML = originalText;
             btn.style.background = '#10b981';
+            btn.disabled = false;
         }, 3000);
 
     } catch (err) {
         console.error('Error:', err);
-        Swal.fire('تنبيه', 'يرجى السماح بالوصول للحافظة', 'warning');
+        // حتى رسائل الخطأ نجعلها تظهر فوق النافذة
+        const targetContainer = document.querySelector('.swal2-container') || 'body';
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: 'يرجى السماح بالوصول للحافظة',
+            target: targetContainer
+        });
     }
 };
 
 // ==========================================
-// 📋 دالة عرض نافذة الطلبات (المحدثة)
+// 📋 دالة عرض نافذة الطلبات (لا تحتاج تعديل جوهري، لكن تأكد من أنها موجودة)
 // ==========================================
 window.openSupportRequestsModal = async function() {
     try {
+        // ... (نفس كود جلب البيانات السابق الخاص بك) ...
         const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("created_at", "desc"));
         const snapshot = await getDocs(q);
         
@@ -2964,7 +2987,7 @@ window.openSupportRequestsModal = async function() {
         
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
-            
+            // ... (نفس معالجة التاريخ والوقت السابقة) ...
             let datePart = "---", timePart = "---";
             if (d.created_at && typeof d.created_at.toDate === 'function') {
                 const dt = d.created_at.toDate();
@@ -2975,34 +2998,28 @@ window.openSupportRequestsModal = async function() {
             tableRows += `
                 <tr style="border-bottom: 1px solid #edf2f7; vertical-align: middle; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                     <td style="padding: 12px 5px; text-align: center; color: #475569; font-size: 11px;">${datePart}</td>
-                    
                     <td style="padding: 12px 5px; text-align: center; color: #64748b; font-size: 11px;">${timePart}</td>
-                    
                     <td style="padding: 12px 10px; font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name || '---'}</td>
-                    
                     <td style="padding: 12px 10px; color: #334155; font-size: 12px;">${d.director_name || '---'}</td>
-                    
                     <td style="padding: 12px 10px; text-align: center;">
                         <span dir="ltr" style="color: #0284c7; font-weight: 600; font-family: monospace; font-size: 12px;">${d.phone || '---'}</span>
                     </td>
                     
-                   // 1. عمود المعرف (ID)
-<td style="padding: 12px 10px; text-align: center;">
-    <span onclick="window.copyData(this, '${d.tv_id}')" 
-          title="اضغط للنسخ"
-          style="cursor: pointer; font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block; min-width: 80px;">
-        ${d.tv_id} <i class="far fa-copy" style="font-size: 10px; color: #94a3b8;"></i>
-    </span>
-</td>
-
-// 2. عمود كلمة السر (Pass)
-<td style="padding: 12px 10px; text-align: center;">
-    <span onclick="window.copyData(this, '${d.tv_pass}')"
-          title="اضغط للنسخ"
-          style="cursor: pointer; font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block; min-width: 60px;">
-        ${d.tv_pass} <i class="far fa-copy" style="font-size: 10px; color: #d97706;"></i>
-    </span>
-</td>
+                    <td style="padding: 12px 10px; text-align: center;">
+                        <span onclick="window.copyData('${d.tv_id}', 'id')" 
+                              title="اضغط لنسخ المعرف"
+                              style="cursor: pointer; font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block;">
+                            ${d.tv_id} <i class="far fa-copy" style="font-size: 10px; color: #94a3b8;"></i>
+                        </span>
+                    </td>
+                    
+                    <td style="padding: 12px 10px; text-align: center;">
+                        <span onclick="window.copyData('${d.tv_pass}', 'pass')"
+                              title="اضغط لنسخ كلمة السر"
+                              style="cursor: pointer; font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block;">
+                            ${d.tv_pass} <i class="far fa-copy" style="font-size: 10px; color: #d97706;"></i>
+                        </span>
+                    </td>
                     
                     <td style="padding: 12px 10px; text-align: left;">
                         <div style="display: flex; gap: 4px; justify-content: flex-end;">
@@ -3022,6 +3039,7 @@ window.openSupportRequestsModal = async function() {
 
         const noDataHtml = `<tr><td colspan="8" style="padding: 50px; text-align: center; color: #94a3b8;">لا توجد طلبات واردة حالياً</td></tr>`;
 
+        // إعدادات النافذة الرئيسية (تأكد من عدم وجود إعداد target هنا ليظهر في الوسط بشكل طبيعي)
         Swal.fire({
             title: '<div style="text-align: right; font-size: 18px; font-weight: 800; color: #1e293b;"><i class="fas fa-headset" style="color: #3b82f6; margin-left: 10px;"></i> قائمة طلبات الدعم الفني المباشر</div>',
             width: '1200px',
@@ -3048,7 +3066,9 @@ window.openSupportRequestsModal = async function() {
             `,
             showConfirmButton: false,
             showCloseButton: true,
-            padding: '1rem'
+            padding: '1rem',
+            // منع إغلاق النافذة عند الضغط خارجها (اختياري لزيادة الأمان)
+            allowOutsideClick: false 
         });
 
     } catch (error) {
@@ -3056,7 +3076,6 @@ window.openSupportRequestsModal = async function() {
         Swal.fire('خطأ', 'فشل تحميل البيانات', 'error');
     }
 };
-
 // 3. دالة إنهاء وحذف الطلب
 window.closeSupportRequest = async function(id) {
     const result = await Swal.fire({
@@ -3078,6 +3097,7 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
 
