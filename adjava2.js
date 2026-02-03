@@ -2893,7 +2893,7 @@ window.copyData = async function(element, text) {
         const originalStyle = element.getAttribute('style');
 
         // 3. تغيير الشكل ليدل على النجاح (بدون إغلاق النافذة)
-        element.innerHTML = '<i class="fas fa-check"></i> منسوخ';
+        element.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
         element.style.background = '#10b981'; // خلفية خضراء
         element.style.color = '#ffffff';      // نص أبيض
         element.style.borderColor = '#10b981';
@@ -3078,6 +3078,7 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
 
