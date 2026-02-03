@@ -1754,7 +1754,7 @@ window.sendSupportRequest = async function() {
 
     // --- 2. تصميم واجهة النافذة (HTML) مع قيود الإدخال ---
    // --- 2. تصميم واجهة النافذة (HTML) مع قيود الإدخال ---
-    const htmlForm = `
+       const htmlForm = `
         <div style="direction:rtl; text-align:right; font-family:'Cairo', sans-serif;">
             <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9; color:#0d47a1; text-align:center;">
                 <i class="fas fa-info-circle"></i> يرجى ملء بيانات المدير والمؤسسة لتسهيل عملية الدعم
@@ -1808,10 +1808,10 @@ window.sendSupportRequest = async function() {
             <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
 
             <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px; border:1px solid #ffeeba; color:#856404;">
-                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وانسخ البيانات:
+                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>TeamViewer QuickSupport</b> وانسخ البيانات:
             </div>
 
-            <div style="text-align:center; margin-bottom:15px; font-size:12px; color:#1e88e5;">
+            <div style="text-align:center; margin-bottom:15px; font-size:12px; color:#666;">
                 <span>إن لم يكن لديك البرنامج يمكنك </span>
                 <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" target="_blank" 
                    style="color:#1e88e5; font-weight:bold; text-decoration:none; border-bottom:1px solid transparent; transition:0.3s;"
@@ -1837,8 +1837,6 @@ window.sendSupportRequest = async function() {
             </div>
         </div>
     `;
-
-    // ملاحظة: يمكنك الآن حذف دالة window.handleTVAction لأننا لم نعد نستخدمها، الرابط أعلاه يقوم بالتحميل المباشر.
 
  
 
@@ -2026,6 +2024,7 @@ window.sendSupportRequest = async function() {
         }
     }
 };
+
 
 
 
