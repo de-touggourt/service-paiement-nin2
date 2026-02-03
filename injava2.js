@@ -1751,8 +1751,7 @@ window.sendSupportRequest = async function() {
   "تماسين": [{ name: "إبتدائية مولود فرعون - نماسين" }, { name: "إبتدائية الطالب السعدي بوخندق - نماسين" }, { name: "إبتدائية الشيخ الصغير التجاني - نماسين" }, { name: "إبتدائية الشيخ الصادق التجاني - نماسين" }, { name: "إبتدائية البشيرتاتي - نماسين" }, { name: "إبتدائية المجاهد بكوش محمد العيد - نماسين" }, { name: "إبتدائية المجاهد رزقان احمد - نماسين" }, { name: "إبتدائية المجاهد لبسيس إبراهيم - نماسين" }, { name: "إبتدائية بوبكري بشير - نماسين" }, { name: "إبتدائية بن قانة براهيم (البحور 2) - نماسين" }, { name: "إبتدائية المجاهد تجاني عبد الحق (حي الكودية ) - نماسين" }]
 };
 
-
-    // --- 2. تصميم واجهة النافذة (HTML) ---
+    // --- 2. تصميم واجهة النافذة (HTML) مع قيود الإدخال ---
     const htmlForm = `
         <div style="direction:rtl; text-align:right; font-family:'Cairo', sans-serif;">
             <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9; color:#0d47a1; text-align:center;">
@@ -1762,11 +1761,13 @@ window.sendSupportRequest = async function() {
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <div style="flex:1;">
                     <label style="font-size:12px; font-weight:bold;">الاسم واللقب الكامل</label>
-                    <input id="sup-name" class="swal2-input" placeholder="اسم المدير(ة)" style="width:100%; margin:5px 0; height:35px; font-size:13px;">
+                    <input id="sup-name" class="swal2-input" placeholder="بالحروف العربية فقط" style="width:100%; margin:5px 0; height:35px; font-size:13px;">
                 </div>
                 <div style="flex:1;">
                     <label style="font-size:12px; font-weight:bold;">رقم الهاتف</label>
-                    <input id="sup-phone" class="swal2-input" placeholder="06XXXXXXXX" maxlength="10" style="width:100%; margin:5px 0; height:35px; font-size:13px; direction:ltr;">
+                    <input id="sup-name" style="display:none"> <input id="sup-phone" type="tel" class="swal2-input" placeholder="06XXXXXXXX" maxlength="10" 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                           style="width:100%; margin:5px 0; height:35px; font-size:13px; direction:ltr;">
                 </div>
             </div>
 
@@ -1818,26 +1819,29 @@ window.sendSupportRequest = async function() {
             <div style="display:flex; gap:10px;">
                  <div style="flex:1;">
                     <label style="font-weight:bold; font-size:12px;">ID (المعرف)</label>
-                    <input id="tv-id" class="swal2-input" placeholder="123 456 789" style="width:100%; margin:5px 0; height:35px; direction:ltr;">
+                    <input id="tv-id" class="swal2-input" placeholder="123 456 789" maxlength="10"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                           style="width:100%; margin:5px 0; height:35px; direction:ltr;">
                 </div>
                 <div style="flex:1;">
                     <label style="font-weight:bold; font-size:12px;">Password</label>
-                    <input id="tv-pass" class="swal2-input" placeholder="****" style="width:100%; margin:5px 0; height:35px; direction:ltr;">
+                    <input id="tv-pass" class="swal2-input" placeholder="****" maxlength="10"
+                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')"
+                           style="width:100%; margin:5px 0; height:35px; direction:ltr;">
                 </div>
             </div>
         </div>
     `;
 
-    // --- 3. وظيفة الزر الذكي (فتح أو تحميل) ---
+    // --- 3. وظيفة الزر الذكي (كما هي) ---
     window.handleTVAction = function() {
         const tvUrl = "teamviewer8://"; 
         const downloadUrl = "https://download.teamviewer.com/download/TeamViewerQS.exe";
         
         const start = Date.now();
-        window.location.href = tvUrl; // محاولة فتح البرنامج إذا كان موجوداً
+        window.location.href = tvUrl;
 
         setTimeout(() => {
-            // إذا لم يفتح البرنامج (بقي المستخدم في الصفحة)، نقوم بالتحميل
             if (Date.now() - start < 1500) {
                 Swal.showValidationMessage('جاري تحميل البرنامج.. يرجى الضغط عليه لتشغيله بعد اكتمال التحميل');
                 window.open(downloadUrl, '_blank');
@@ -1845,7 +1849,7 @@ window.sendSupportRequest = async function() {
         }, 1000);
     };
 
-    // --- 4. تشغيل النافذة ومنطق الربط بين القوائم ---
+    // --- 4. تشغيل النافذة ومنطق الربط بين القوائم + التحقق الصارم ---
     const { value: formValues } = await Swal.fire({
         title: 'طلب دعم فني مباشر',
         html: htmlForm,
@@ -1855,144 +1859,178 @@ window.sendSupportRequest = async function() {
         cancelButtonText: 'إلغاء',
         confirmButtonColor: '#28a745',
         didOpen: () => {
-            const levelSel = document.getElementById('sup-level');
-            const daairaSel = document.getElementById('sup-daaira');
-            const baladiyaSel = document.getElementById('sup-baladiya');
-            const schoolSel = document.getElementById('sup-school');
+             // ... (نفس كود تعبئة القوائم المنسدلة السابق تماماً) ...
+             const levelSel = document.getElementById('sup-level');
+             const daairaSel = document.getElementById('sup-daaira');
+             const baladiyaSel = document.getElementById('sup-baladiya');
+             const schoolSel = document.getElementById('sup-school');
 
-            // تعبئة الدوائر
-            Object.keys(baladiyaMap).forEach(d => {
-                daairaSel.add(new Option(d, d));
-            });
+             Object.keys(baladiyaMap).forEach(d => {
+                 daairaSel.add(new Option(d, d));
+             });
 
-            // تحديث البلديات عند تغيير الدائرة
-            daairaSel.addEventListener('change', () => {
-                baladiyaSel.innerHTML = '<option value="">-- اختر --</option>';
-                const selectedDaaira = daairaSel.value;
-                if(selectedDaaira && baladiyaMap[selectedDaaira]) {
-                    baladiyaMap[selectedDaaira].forEach(b => {
-                        baladiyaSel.add(new Option(b, b));
-                    });
-                }
-                updateSchools();
-            });
+             daairaSel.addEventListener('change', () => {
+                 baladiyaSel.innerHTML = '<option value="">-- اختر --</option>';
+                 const selectedDaaira = daairaSel.value;
+                 if(selectedDaaira && baladiyaMap[selectedDaaira]) {
+                     baladiyaMap[selectedDaaira].forEach(b => {
+                         baladiyaSel.add(new Option(b, b));
+                     });
+                 }
+                 updateSchools();
+             });
 
-            // دالة تحديث المؤسسات
-            function updateSchools() {
-                schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
-                const lvl = levelSel.value;
-                const daaira = daairaSel.value;
-                const baladiya = baladiyaSel.value;
+             function updateSchools() {
+                 schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
+                 const lvl = levelSel.value;
+                 const daaira = daairaSel.value;
+                 const baladiya = baladiyaSel.value;
 
-                if(!lvl) return;
+                 if(!lvl) return;
 
-                let options = [];
-                if (lvl === 'ابتدائي') {
-                    if (baladiya && primarySchoolsByBaladiya[baladiya]) {
-                        options = primarySchoolsByBaladiya[baladiya];
-                    }
-                } else {
-                    if (daaira && institutionsByDaaira[daaira] && institutionsByDaaira[daaira][lvl]) {
-                        options = institutionsByDaaira[daaira][lvl];
-                    }
-                }
+                 let options = [];
+                 if (lvl === 'ابتدائي') {
+                     if (baladiya && primarySchoolsByBaladiya[baladiya]) {
+                         options = primarySchoolsByBaladiya[baladiya];
+                     }
+                 } else {
+                     if (daaira && institutionsByDaaira[daaira] && institutionsByDaaira[daaira][lvl]) {
+                         options = institutionsByDaaira[daaira][lvl];
+                     }
+                 }
 
-                options.forEach(item => {
-                    schoolSel.add(new Option(item.name, item.name));
-                });
-            }
+                 options.forEach(item => {
+                     schoolSel.add(new Option(item.name, item.name));
+                 });
+             }
 
-            baladiyaSel.addEventListener('change', updateSchools);
-            levelSel.addEventListener('change', updateSchools);
+             baladiyaSel.addEventListener('change', updateSchools);
+             levelSel.addEventListener('change', updateSchools);
         },
         preConfirm: () => {
-            const data = {
-                name: document.getElementById('sup-name').value.trim(),
-                phone: document.getElementById('sup-phone').value.trim(),
-                level: document.getElementById('sup-level').value,
-                daaira: document.getElementById('sup-daaira').value,
-                baladiya: document.getElementById('sup-baladiya').value,
-                school: document.getElementById('sup-school').value,
-                tvId: document.getElementById('tv-id').value.trim(),
-                tvPass: document.getElementById('tv-pass').value.trim()
-            };
+            // جلب القيم
+            const rawName = document.getElementById('sup-name').value.trim();
+            const rawPhone = document.getElementById('sup-phone').value.trim();
+            const rawTvId = document.getElementById('tv-id').value.trim();
+            const rawTvPass = document.getElementById('tv-pass').value.trim();
+            
+            const level = document.getElementById('sup-level').value;
+            const daaira = document.getElementById('sup-daaira').value;
+            const baladiya = document.getElementById('sup-baladiya').value;
+            const school = document.getElementById('sup-school').value;
 
-            if (!data.name || !data.phone || !data.school || !data.tvId || !data.tvPass) {
-                Swal.showValidationMessage('يرجى ملء كافة البيانات المطلوبة قبل الإرسال');
+            // --- قواعد التحقق (Validation Logic) ---
+
+            // 1. التحقق من ملء الحقول الأساسية
+            if (!rawName || !rawPhone || !school || !rawTvId || !rawTvPass) {
+                Swal.showValidationMessage('يرجى ملء كافة البيانات المطلوبة');
                 return false;
             }
-            return data;
+
+            // 2. التحقق من الاسم (حروف عربية ومسافات فقط)
+            const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+            if (!arabicRegex.test(rawName)) {
+                Swal.showValidationMessage('الاسم يجب أن يحتوي على حروف عربية فقط');
+                return false;
+            }
+
+            // 3. التحقق من الهاتف (10 أرقام، يبدأ بـ 05, 06, 07)
+            const phoneRegex = /^(05|06|07)[0-9]{8}$/;
+            if (!phoneRegex.test(rawPhone)) {
+                Swal.showValidationMessage('رقم الهاتف يجب أن يتكون من 10 أرقام ويبدأ بـ 05، 06 أو 07');
+                return false;
+            }
+
+            // 4. التحقق من ID (أرقام فقط، بحد أقصى 10 خانات) - الطول محدد في HTML ولكن نتأكد هنا
+            const idRegex = /^[0-9]+$/;
+            if (!idRegex.test(rawTvId)) {
+                Swal.showValidationMessage('معرف ID يجب أن يحتوي على أرقام فقط');
+                return false;
+            }
+
+            // 5. التحقق من Password (حروف وأرقام فقط، لا رموز)
+            const passRegex = /^[a-zA-Z0-9]+$/;
+            if (!passRegex.test(rawTvPass)) {
+                Swal.showValidationMessage('كلمة المرور يجب أن لا تحتوي على رموز خاصة');
+                return false;
+            }
+
+            // إرجاع البيانات النظيفة
+            return {
+                name: rawName,
+                phone: rawPhone,
+                level: level,
+                daaira: daaira,
+                baladiya: baladiya,
+                school: school,
+                tvId: rawTvId,
+                tvPass: rawTvPass
+            };
         }
     });
 
-    // --- 5. إرسال البيانات إلى Firebase ---
-  // --- 5. إرسال البيانات إلى Firebase مع عرض تفاصيل الطلب السابق ---
-if (formValues) {
-    Swal.fire({ 
-        title: 'جاري التحقق من حالة الطلب...', 
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading() 
-    });
+    // --- 5. إرسال البيانات إلى Firebase (نفس الكود السابق) ---
+    if (formValues) {
+        Swal.fire({ 
+            title: 'جاري التحقق من حالة الطلب...', 
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading() 
+        });
 
-    try {
-        // البحث عن طلب معلق لنفس المؤسسة
-        const existingRequests = await db.collection("support_requests")
-            .where("school_name", "==", formValues.school)
-            .where("status", "==", "pending")
-            .get();
+        try {
+            const existingRequests = await db.collection("support_requests")
+                .where("school_name", "==", formValues.school)
+                .where("status", "==", "pending")
+                .get();
 
-        if (!existingRequests.empty) {
-            // استخراج بيانات أول طلب موجود في القائمة
-            const existingDoc = existingRequests.docs[0].data();
-            
-            // تحويل التاريخ من Firebase Timestamp إلى صيغة مقروءة
-            const requestDate = existingDoc.created_at ? 
+            if (!existingRequests.empty) {
+                const existingDoc = existingRequests.docs[0].data();
+                const requestDate = existingDoc.created_at ? 
                                 existingDoc.created_at.toDate().toLocaleString('ar-DZ') : 
                                 'غير محدد';
 
-            Swal.fire({
-                icon: 'info',
-                title: 'هذا الطلب موجود مسبقاً',
-                html: `
-                    <div style="text-align: right; direction: rtl; font-size: 14px; line-height: 1.6;">
-                        <p>يوجد طلب دعم فني <b>قيد الانتظار</b> لهذه المؤسسة حالياً:</p>
-                        <hr>
-                        <ul style="list-style: none; padding: 0;">
-                            <li><b>المؤسسة:</b> ${existingDoc.school_name}</li>
-                            <li><b>المدير(ة):</b> ${existingDoc.director_name}</li>
-                            <li><b>تاريخ الطلب:</b> ${requestDate}</li>
-                        </ul>
-                        <hr>
-                        <p style="color: #d33; font-weight: bold; text-align: center;">يرجى عدم تكرار الطلب والانتظار حتى يتم معالجته أو حذفه.</p>
-                    </div>
-                `,
-                confirmButtonText: 'حسناً',
-                confirmButtonColor: '#007bff'
+                Swal.fire({
+                    icon: 'info',
+                    title: 'هذا الطلب موجود مسبقاً',
+                    html: `
+                        <div style="text-align: right; direction: rtl; font-size: 14px; line-height: 1.6;">
+                            <p>يوجد طلب دعم فني <b>قيد الانتظار</b> لهذه المؤسسة حالياً:</p>
+                            <hr>
+                            <ul style="list-style: none; padding: 0;">
+                                <li><b>المؤسسة:</b> ${existingDoc.school_name}</li>
+                                <li><b>المدير(ة):</b> ${existingDoc.director_name}</li>
+                                <li><b>تاريخ الطلب:</b> ${requestDate}</li>
+                            </ul>
+                            <hr>
+                            <p style="color: #d33; font-weight: bold; text-align: center;">يرجى الانتظار حتى يتم معالجته.</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#007bff'
+                });
+                return; 
+            }
+
+            await db.collection("support_requests").add({
+                director_name: formValues.name,
+                phone: formValues.phone,
+                level: formValues.level,
+                daaira: formValues.daaira,
+                baladiya: formValues.baladiya,
+                school_name: formValues.school,
+                tv_id: formValues.tvId,
+                tv_pass: formValues.tvPass,
+                status: "pending",
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
             });
-            return; 
+            
+            Swal.fire('تم بنجاح', 'وصل طلبك، يرجى إبقاء البرنامج مفتوحاً', 'success');
+
+        } catch (e) {
+            console.error(e);
+            Swal.fire('خطأ', 'فشل في الاتصال بقاعدة البيانات', 'error');
         }
-
-        // إرسال الطلب الجديد إذا لم يوجد تكرار
-        await db.collection("support_requests").add({
-            director_name: formValues.name,
-            phone: formValues.phone,
-            level: formValues.level,
-            daaira: formValues.daaira,
-            baladiya: formValues.baladiya,
-            school_name: formValues.school,
-            tv_id: formValues.tvId,
-            tv_pass: formValues.tvPass,
-            status: "pending",
-            created_at: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        Swal.fire('تم بنجاح', 'وصل طلبك، يرجى إبقاء البرنامج مفتوحاً', 'success');
-
-    } catch (e) {
-        console.error(e);
-        Swal.fire('خطأ', 'فشل في الاتصال بقاعدة البيانات', 'error');
     }
-}
 };
 
 
