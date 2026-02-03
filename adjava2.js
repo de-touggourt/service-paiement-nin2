@@ -2914,6 +2914,7 @@ window.connectToTeamViewer = function(id, pass) {
 // ==========================================
 window.openSupportRequestsModal = async function() {
     try {
+        // جلب البيانات من Firebase (ترتيب تنازلي حسب وقت الإنشاء)
         const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("created_at", "desc"));
         const snapshot = await getDocs(q);
         
@@ -2922,101 +2923,71 @@ window.openSupportRequestsModal = async function() {
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
             
-            // 1. تنسيق التاريخ (وقت فقط إذا كان اليوم، أو تاريخ مختصر)
-            let dateStr = "---";
+            // معالجة التاريخ والوقت
+            let datePart = "---";
+            let timePart = "---";
             if (d.created_at && typeof d.created_at.toDate === 'function') {
-                const date = d.created_at.toDate();
-                dateStr = date.toLocaleTimeString('ar-DZ', {hour: '2-digit', minute:'2-digit'});
+                const dt = d.created_at.toDate();
+                datePart = dt.toLocaleDateString('ar-DZ');
+                timePart = dt.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' });
             }
 
-            // 2. تحديد ألوان الأطوار بتدرجات عصرية
-            const levelConfig = {
-                "ابتدائي": { color: "#27ae60", bg: "#eafaf1" },
-                "متوسط": { color: "#e67e22", bg: "#fef5e7" },
-                "ثانوي": { color: "#2980b9", bg: "#ebf5fb" }
-            };
-            const levelStyle = levelConfig[d.level] || { color: "#7f8c8d", bg: "#f4f6f6" };
-
             tableRows += `
-                <tr style="border-bottom: 1px solid #edf2f7; transition: all 0.2s; vertical-align: middle;" onmouseover="this.style.background='#fcfdfe'" onmouseout="this.style.background='transparent'">
+                <tr style="border-bottom: 1px solid #edf2f7; vertical-align: middle; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 12px 8px; text-align: center; color: #475569; font-size: 12px; font-weight: 500;">${datePart}</td>
+                    
+                    <td style="padding: 12px 8px; text-align: center; color: #64748b; font-size: 12px;">${timePart}</td>
+                    
+                    <td style="padding: 12px 8px; font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name || '---'}</td>
+                    
+                    <td style="padding: 12px 8px; color: #334155; font-size: 13px;">${d.director_name || '---'}</td>
                     
                     <td style="padding: 12px 8px; text-align: center;">
-                        <span style="display: block; font-size: 11px; color: #94a3b8; font-weight: 600;">
-                            <i class="far fa-clock"></i> ${dateStr}
-                        </span>
+                        <span dir="ltr" style="color: #0284c7; font-weight: 600; font-family: monospace;">${d.phone || '---'}</span>
                     </td>
-
-                    <td style="padding: 12px 8px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="background: ${levelStyle.bg}; color: ${levelStyle.color}; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
-                                <i class="fas fa-school"></i>
-                            </div>
-                            <div style="white-space: nowrap;">
-                                <div style="font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name || '---'}</div>
-                                <div style="font-size: 11px; color: #64748b;">
-                                    <i class="fas fa-user-tie" style="font-size: 9px;"></i> ${d.director_name} 
-                                    <span style="margin: 0 5px; color: #cbd5e1;">|</span> 
-                                    <i class="fas fa-map-marker-alt" style="font-size: 9px;"></i> ${d.baladiya}
-                                </div>
-                            </div>
-                        </div>
+                    
+                    <td style="padding: 12px 8px; text-align: center;">
+                        <span style="font-family: monospace; background: #f8fafc; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 14px;">${d.tv_id}</span>
                     </td>
-
-                    <td style="padding: 12px 8px;">
-                        <div style="display: inline-flex; align-items: center; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <div style="font-family: 'Monaco', monospace; font-size: 13px; font-weight: bold; color: #0f172a; letter-spacing: 0.5px;">
-                                <span style="color: #64748b; font-size: 10px; margin-left: 4px;">ID:</span>${d.tv_id}
-                            </div>
-                            <div style="width: 1px; height: 15px; background: #cbd5e1; margin: 0 8px;"></div>
-                            <div style="font-family: 'Monaco', monospace; font-size: 13px; font-weight: bold; color: #059669;">
-                                <span style="color: #64748b; font-size: 10px; margin-left: 4px;">PW:</span>${d.tv_pass}
-                            </div>
-                        </div>
+                    
+                    <td style="padding: 12px 8px; text-align: center;">
+                        <span style="font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 14px;">${d.tv_pass}</span>
                     </td>
-
+                    
                     <td style="padding: 12px 8px; text-align: left;">
-                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                        <div style="display: flex; gap: 5px; justify-content: flex-end;">
                             <button onclick="window.connectToTeamViewer('${d.tv_id}', '${d.tv_pass}')" 
-                                    title="اتصال سريع"
-                                    style="background: #3b82f6; color: white; border: none; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-bolt"></i>
+                                    style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-external-link-alt"></i> اتصال
                             </button>
                             <button onclick="window.closeSupportRequest('${docSnap.id}')" 
-                                    title="إنهاء الطلب"
-                                    style="background: white; color: #ef4444; border: 1px solid #fecaca; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-check"></i>
+                                    style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-trash"></i> حذف
                             </button>
                         </div>
                     </td>
                 </tr>`;
         });
 
-        const noDataHtml = `<tr><td colspan="4" style="padding: 50px; text-align: center; color: #94a3b8;">
-            <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.3;"><i class="fas fa-inbox"></i></div>
-            لا توجد طلبات معلقة حالياً
-        </td></tr>`;
+        const noDataHtml = `<tr><td colspan="8" style="padding: 40px; text-align: center; color: #94a3b8;">لا توجد طلبات واردة حالياً</td></tr>`;
 
+        // عرض النافذة باستخدام SweetAlert2
         Swal.fire({
-            title: `
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 10px;">
-                    <span style="font-size: 18px; font-weight: 800; color: #1e293b;">
-                        <i class="fas fa-headset" style="color: #3b82f6; margin-left: 8px;"></i>طلبات الدعم المباشرة
-                    </span>
-                    <span style="background: #eff6ff; color: #3b82f6; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #dbeafe;">
-                        ${snapshot.size} طلبات نشطة
-                    </span>
-                </div>
-            `,
-            width: '900px',
+            title: '<div style="text-align: right; font-size: 18px; font-weight: 800; color: #1e293b;"><i class="fas fa-list-ul" style="color: #3b82f6; margin-left: 10px;"></i> قائمة طلبات الدعم الفني</div>',
+            width: '1100px',
             html: `
-                <div style="overflow-x: auto; margin-top: 10px;">
-                    <table style="width: 100%; border-collapse: collapse; direction: rtl; text-align: right;">
-                        <thead>
-                            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700; text-align: center; width: 80px;">الوقت</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700;">المؤسسة والمعلومات</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700; width: 220px;">بيانات الوصول (TV)</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700; text-align: left; width: 100px;">إجراء</th>
+                <div style="overflow-x: auto; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; direction: rtl; text-align: right; font-family: 'Cairo', sans-serif;">
+                        <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                            <tr>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 90px;">التاريخ</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 80px;">الوقت</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800;">اسم المؤسسة</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; width: 140px;">المدير</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 110px;">الهاتف</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 130px;">ID</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 100px;">PW</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: left; width: 150px;">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -3027,13 +2998,12 @@ window.openSupportRequestsModal = async function() {
             `,
             showConfirmButton: false,
             showCloseButton: true,
-            padding: '1rem',
-            customClass: { popup: 'modern-support-modal' }
+            padding: '1rem'
         });
 
     } catch (error) {
         console.error(error);
-        Swal.fire('خطأ', 'تعذر جلب البيانات', 'error');
+        Swal.fire('خطأ', 'تعذر جلب البيانات من الخادم', 'error');
     }
 };
 
@@ -3058,4 +3028,5 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
