@@ -3023,12 +3023,12 @@ window.openSupportRequestsModal = async function() {
                         <span dir="ltr" style="color: #0284c7; font-weight: 600; font-family: monospace; font-size: 12px;">${d.phone || '---'}</span>
                     </td>
                     
-                    <td style="padding: 12px 10px; text-align: center;">
+     <td style="padding: 12px 10px; text-align: center;">
     <span onclick="window.copyData('${d.tv_id}', 'id')" 
           title="اضغط لنسخ المعرف"
-          /* لاحظ إضافة dir="ltr" هنا وإضافة unicode-bidi */
-          style="cursor: pointer; font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; direction: ltr; unicode-bidi: isolate;">
-        ${d.tv_id} <i class="far fa-copy" style="font-size: 10px; color: #94a3b8;"></i>
+          style="cursor: pointer; font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 10px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-flex; flex-direction: row; align-items: center; gap: 8px; direction: ltr;">
+        <span>${d.tv_id}</span>
+        <i class="far fa-copy" style="font-size: 11px; color: #94a3b8;"></i>
     </span>
 </td>
                     
@@ -3117,6 +3117,7 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
 
