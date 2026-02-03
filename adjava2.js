@@ -2881,39 +2881,76 @@ window.startSupportListener = function() {
 };
 
 // ==========================================
+// 🔔 دالة مساعدة لإظهار تنبيه داخل النافذة المفتوحة دون إغلاقها
+// ==========================================
+window.showInModalToast = function(message, type = 'success') {
+    const popup = Swal.getPopup(); // جلب النافذة المفتوحة حالياً
+    
+    // إذا لم تكن هناك نافذة مفتوحة، نستخدم التنبيه العادي
+    if (!popup) {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: type,
+            title: message,
+            showConfirmButton: false,
+            timer: 2000
+        });
+        return;
+    }
+
+    // إنشاء عنصر التنبيه يدوياً
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px; /* أو right حسب الاتجاه */
+        background: ${type === 'success' ? '#10b981' : '#ef4444'};
+        color: white;
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-family: 'Cairo', sans-serif;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 9999;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    `;
+    toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+
+    // إضافته للنافذة الحالية
+    popup.appendChild(toast);
+
+    // إظهار التنبيه
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+    });
+
+    // إخفاء التنبيه بعد ثانيتين
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+};
+
+// ==========================================
 // 🛠️ دالة مساعدة لنسخ النصوص (معدلة لتعمل فوق النافذة الحالية)
 // ==========================================
 window.copyData = async function(text, type) {
     try {
         await navigator.clipboard.writeText(text);
-        const title = type === 'id' ? 'تم نسخ المعرف' : 'تم نسخ كلمة السر';
+        const msg = type === 'id' ? 'تم نسخ المعرف بنجاح' : 'تم نسخ كلمة السر';
         
-        // تحديد مكان ظهور التنبيه ليكون فوق النافذة الحالية
-        // نتحقق مما إذا كانت هناك نافذة مفتوحة بالفعل
-        const targetContainer = document.querySelector('.swal2-container') || 'body';
-
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-            target: targetContainer, // 👈 هذا هو السطر السحري الذي يمنع إغلاق النافذة
-            customClass: {
-                container: 'toast-on-top' // لضمان ظهورها في الطبقة العليا
-            },
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-
-        Toast.fire({
-            icon: 'success',
-            title: title
-        });
+        // استخدام دالة التنبيه الخاصة بنا بدلاً من Swal.fire
+        window.showInModalToast(msg, 'success');
+        
     } catch (err) {
         console.error('فشل النسخ', err);
+        window.showInModalToast('فشل النسخ', 'error');
     }
 };
 
@@ -2929,48 +2966,29 @@ window.connectToTeamViewer = async function(btn, tvId, tvPass) {
 
         // حفظ نص الزر الأصلي
         const originalText = btn.innerHTML;
-        
-        // تغيير شكل الزر
+        const originalBg = btn.style.background;
+
+        // تغيير شكل الزر ليدل على العمل
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> فتح...';
         btn.style.background = '#3b82f6';
-        btn.disabled = true; // تعطيل الزر مؤقتاً لمنع التكرار
+        btn.disabled = true;
 
-        // 2. محاولة فتح البروتوكول
+        // 2. إظهار تنبيه داخل النافذة (بدلاً من Swal الذي يغلقها)
+        window.showInModalToast('تم النسخ وجاري فتح البرنامج...', 'success');
+
+        // 3. فتح البروتوكول
         window.location.href = `teamviewer10://control?device=${cleanId}`;
 
-        // تحديد الهدف ليكون النافذة المفتوحة
-        const targetContainer = document.querySelector('.swal2-container') || 'body';
-
-        // 3. عرض التنبيه دون إغلاق النافذة الأم
-        Swal.fire({
-            toast: true, // مهم جداً أن يكون toast
-            position: 'top-end',
-            icon: 'success',
-            title: 'جاري فتح TeamViewer',
-            text: 'تم نسخ المعرف للحافظة',
-            showConfirmButton: false,
-            timer: 3000,
-            target: targetContainer, // 👈 يمنع إغلاق الجدول
-        });
-
-        // 4. إعادة الزر لحالته الطبيعية
+        // 4. إعادة الزر لحالته الطبيعية بعد 3 ثواني
         setTimeout(() => {
             btn.innerHTML = originalText;
-            btn.style.background = '#10b981';
+            btn.style.background = originalBg || '#10b981';
             btn.disabled = false;
         }, 3000);
 
     } catch (err) {
         console.error('Error:', err);
-        // حتى رسائل الخطأ نجعلها تظهر فوق النافذة
-        const targetContainer = document.querySelector('.swal2-container') || 'body';
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'warning',
-            title: 'يرجى السماح بالوصول للحافظة',
-            target: targetContainer
-        });
+        window.showInModalToast('يرجى السماح بالوصول للحافظة', 'error');
     }
 };
 
@@ -3068,7 +3086,8 @@ window.openSupportRequestsModal = async function() {
             showCloseButton: true,
             padding: '1rem',
             // منع إغلاق النافذة عند الضغط خارجها (اختياري لزيادة الأمان)
-            allowOutsideClick: false 
+            allowOutsideClick: false, 
+            allowEscapeKey: false
         });
 
     } catch (error) {
@@ -3097,6 +3116,7 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
 
