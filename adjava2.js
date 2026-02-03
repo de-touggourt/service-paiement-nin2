@@ -2914,7 +2914,6 @@ window.connectToTeamViewer = function(id, pass) {
 // ==========================================
 window.openSupportRequestsModal = async function() {
     try {
-        // ترتيب حسب حقل created_at الجديد
         const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("created_at", "desc"));
         const snapshot = await getDocs(q);
         
@@ -2923,103 +2922,118 @@ window.openSupportRequestsModal = async function() {
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
             
-            // تنسيق التاريخ من طابع السيرفر (Timestamp)
+            // 1. تنسيق التاريخ (وقت فقط إذا كان اليوم، أو تاريخ مختصر)
             let dateStr = "---";
             if (d.created_at && typeof d.created_at.toDate === 'function') {
-                dateStr = window.fmtDateTime(d.created_at.toDate());
+                const date = d.created_at.toDate();
+                dateStr = date.toLocaleTimeString('ar-DZ', {hour: '2-digit', minute:'2-digit'});
             }
 
-            // تحديد لون شارة الطور
-            let levelBadgeColor = "#6c757d"; // رمادي افتراضي
-            if(d.level === "ابتدائي") levelBadgeColor = "#28a745"; // أخضر
-            else if(d.level === "متوسط") levelBadgeColor = "#fd7e14"; // برتقالي
-            else if(d.level === "ثانوي") levelBadgeColor = "#007bff"; // أزرق
+            // 2. تحديد ألوان الأطوار بتدرجات عصرية
+            const levelConfig = {
+                "ابتدائي": { color: "#27ae60", bg: "#eafaf1" },
+                "متوسط": { color: "#e67e22", bg: "#fef5e7" },
+                "ثانوي": { color: "#2980b9", bg: "#ebf5fb" }
+            };
+            const levelStyle = levelConfig[d.level] || { color: "#7f8c8d", bg: "#f4f6f6" };
 
             tableRows += `
-                <tr style="border-bottom:1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+                <tr style="border-bottom: 1px solid #edf2f7; transition: all 0.2s; vertical-align: middle;" onmouseover="this.style.background='#fcfdfe'" onmouseout="this.style.background='transparent'">
                     
-                    <td style="padding:10px; font-size:11px; color:#555; white-space:nowrap;">
-                        <i class="far fa-clock"></i> ${dateStr}
+                    <td style="padding: 12px 8px; text-align: center;">
+                        <span style="display: block; font-size: 11px; color: #94a3b8; font-weight: 600;">
+                            <i class="far fa-clock"></i> ${dateStr}
+                        </span>
                     </td>
 
-                    <td style="padding:10px;">
-                        <div style="font-weight:bold; color:#2c3e50; font-size:13px;">${d.director_name || 'غير محدد'}</div>
-                        <div style="font-size:12px; color:#666; margin-top:2px;">
-                            <i class="fas fa-phone-alt" style="font-size:10px;"></i> <span dir="ltr">${d.phone || '---'}</span>
+                    <td style="padding: 12px 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="background: ${levelStyle.bg}; color: ${levelStyle.color}; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
+                                <i class="fas fa-school"></i>
+                            </div>
+                            <div style="white-space: nowrap;">
+                                <div style="font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name || '---'}</div>
+                                <div style="font-size: 11px; color: #64748b;">
+                                    <i class="fas fa-user-tie" style="font-size: 9px;"></i> ${d.director_name} 
+                                    <span style="margin: 0 5px; color: #cbd5e1;">|</span> 
+                                    <i class="fas fa-map-marker-alt" style="font-size: 9px;"></i> ${d.baladiya}
+                                </div>
+                            </div>
                         </div>
                     </td>
 
-                    <td style="padding:10px;">
-                        <div style="font-weight:bold; font-size:12px; color:#000;">${d.school_name || '---'}</div>
-                        <div style="margin-top:4px;">
-                            <span style="background-color:${levelBadgeColor}; color:white; padding:1px 6px; border-radius:4px; font-size:10px;">${d.level || '-'}</span>
-                            <span style="font-size:11px; color:#555; margin-right:5px;">(${d.daaira || ''} / ${d.baladiya || ''})</span>
+                    <td style="padding: 12px 8px;">
+                        <div style="display: inline-flex; align-items: center; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-family: 'Monaco', monospace; font-size: 13px; font-weight: bold; color: #0f172a; letter-spacing: 0.5px;">
+                                <span style="color: #64748b; font-size: 10px; margin-left: 4px;">ID:</span>${d.tv_id}
+                            </div>
+                            <div style="width: 1px; height: 15px; background: #cbd5e1; margin: 0 8px;"></div>
+                            <div style="font-family: 'Monaco', monospace; font-size: 13px; font-weight: bold; color: #059669;">
+                                <span style="color: #64748b; font-size: 10px; margin-left: 4px;">PW:</span>${d.tv_pass}
+                            </div>
                         </div>
                     </td>
 
-                    <td style="padding:10px;">
-                         <div style="display:flex; align-items:center; gap:5px; margin-bottom:3px;">
-                            <span style="font-size:11px; color:#666; width:25px;">ID:</span>
-                            <span style="font-family:monospace; color:#0d6efd; font-weight:bold; font-size:14px; letter-spacing:1px;">${d.tv_id}</span>
-                         </div>
-                         <div style="display:flex; align-items:center; gap:5px;">
-                            <span style="font-size:11px; color:#666; width:25px;">PW:</span>
-                            <span style="font-family:monospace; background:#fff3cd; padding:1px 6px; border-radius:3px; font-weight:bold; border:1px solid #ffeeba;">${d.tv_pass}</span>
-                         </div>
-                    </td>
-
-                    <td style="padding:10px; text-align:center; vertical-align:middle;">
-                        <button onclick="window.connectToTeamViewer('${d.tv_id}', '${d.tv_pass}')" 
-                                class="btn" style="background:#28a745; color:white; padding:6px 12px; font-size:12px; border:none; border-radius:50px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 5px rgba(40,167,69,0.2);">
-                            <i class="fas fa-bolt"></i> اتصال
-                        </button>
-                        <button onclick="window.closeSupportRequest('${docSnap.id}')" 
-                                class="btn" style="background:#fff; color:#dc3545; border:1px solid #dc3545; padding:5px 10px; font-size:11px; margin-top:5px; border-radius:50px; cursor:pointer;">
-                            <i class="fas fa-times"></i> إنهاء
-                        </button>
+                    <td style="padding: 12px 8px; text-align: left;">
+                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                            <button onclick="window.connectToTeamViewer('${d.tv_id}', '${d.tv_pass}')" 
+                                    title="اتصال سريع"
+                                    style="background: #3b82f6; color: white; border: none; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-bolt"></i>
+                            </button>
+                            <button onclick="window.closeSupportRequest('${docSnap.id}')" 
+                                    title="إنهاء الطلب"
+                                    style="background: white; color: #ef4444; border: 1px solid #fecaca; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
         });
 
-        const noDataHtml = `
-            <tr>
-                <td colspan="5" style="text-align:center; padding:40px; color:#999;">
-                    <i class="fas fa-check-circle" style="font-size:40px; margin-bottom:10px; color:#e9ecef;"></i><br>
-                    لا توجد طلبات مساعدة نشطة حالياً
-                </td>
-            </tr>`;
+        const noDataHtml = `<tr><td colspan="4" style="padding: 50px; text-align: center; color: #94a3b8;">
+            <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.3;"><i class="fas fa-inbox"></i></div>
+            لا توجد طلبات معلقة حالياً
+        </td></tr>`;
 
         Swal.fire({
-            title: '<div style="display:flex; align-items:center; gap:10px;"><i class="fas fa-headset" style="color:#0d6efd;"></i> طلبات الدعم الفني الواردة</div>',
-            width: '1000px',
+            title: `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 10px;">
+                    <span style="font-size: 18px; font-weight: 800; color: #1e293b;">
+                        <i class="fas fa-headset" style="color: #3b82f6; margin-left: 8px;"></i>طلبات الدعم المباشرة
+                    </span>
+                    <span style="background: #eff6ff; color: #3b82f6; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #dbeafe;">
+                        ${snapshot.size} طلبات نشطة
+                    </span>
+                </div>
+            `,
+            width: '900px',
             html: `
-                <div style="border:1px solid #dee2e6; border-radius:8px; overflow:hidden;">
-                    <table style="width:100%; direction:rtl; text-align:right; font-size:14px; border-collapse:collapse;">
-                        <thead style="background:#f8f9fa; color:#495057; border-bottom:2px solid #dee2e6;">
-                            <tr>
-                                <th style="padding:12px; width:120px;">وقت الطلب</th>
-                                <th style="padding:12px; width:200px;">معلومات المدير</th>
-                                <th style="padding:12px;">المؤسسة والموقع</th>
-                                <th style="padding:12px; width:180px;">بيانات TeamViewer</th>
-                                <th style="padding:12px; width:100px; text-align:center;">الإجراء</th>
+                <div style="overflow-x: auto; margin-top: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; direction: rtl; text-align: right;">
+                        <thead>
+                            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700; text-align: center; width: 80px;">الوقت</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700;">المؤسسة والمعلومات</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700; width: 220px;">بيانات الوصول (TV)</th>
+                                <th style="padding: 12px 8px; color: #64748b; font-size: 12px; font-weight: 700; text-align: left; width: 100px;">إجراء</th>
                             </tr>
                         </thead>
-                        <tbody style="background:white;">
+                        <tbody>
                             ${tableRows || noDataHtml}
                         </tbody>
                     </table>
                 </div>
-                <div style="margin-top:15px; background:#e3f2fd; padding:10px; border-radius:6px; font-size:12px; color:#0d47a1; text-align:center; border:1px solid #bbdefb;">
-                    <i class="fas fa-info-circle"></i> <b>نصيحة:</b> اضغط زر "اتصال" لفتح البرنامج ونسخ كلمة المرور تلقائياً.
-                </div>
             `,
             showConfirmButton: false,
             showCloseButton: true,
-            customClass: { popup: 'swal-wide' }
+            padding: '1rem',
+            customClass: { popup: 'modern-support-modal' }
         });
+
     } catch (error) {
-        console.error("Error fetching support requests:", error);
-        Swal.fire('خطأ', 'فشل تحميل الطلبات: ' + error.message, 'error');
+        console.error(error);
+        Swal.fire('خطأ', 'تعذر جلب البيانات', 'error');
     }
 };
 
@@ -3044,3 +3058,4 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
