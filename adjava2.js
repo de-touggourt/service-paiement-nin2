@@ -2884,80 +2884,78 @@ window.startSupportListener = function() {
 // ==========================================
 // 🛠️ دالة الاتصال الذكي بـ TeamViewer
 // ==========================================
-// 1. الدالة المسؤولة عن الاتصال والنسخ الذكي
-window.connectToTeamViewer = async function(tvId, tvPass) {
-    const cleanId = tvId.replace(/\s/g, ''); // إزالة الفراغات من المعرف
-    
-    try {
-        // نسخ كلمة السر للحافظة أولاً
-        await navigator.clipboard.writeText(tvPass);
-        
-        // محاولة فتح البرنامج وتمرير المعرف
-        window.location.href = `teamviewer10://control?device=${cleanId}`;
+// دالة النسخ المتسلسل الذكية
+window.smartCopy = async function(btn, tvId, tvPass) {
+    const isFirstStep = !btn.dataset.step || btn.dataset.step === '1';
 
-        // تنبيه صغير للمستخدم
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'تم نسخ كلمة السر! المعرف سيعمل تلقائياً في البرنامج',
-            showConfirmButton: false,
-            timer: 3000
-        });
-    } catch (err) {
-        console.error('فشل النسخ:', err);
+    if (isFirstStep) {
+        // الخطوة 1: نسخ المعرف
+        await navigator.clipboard.writeText(tvId.replace(/\s/g, ''));
+        btn.innerHTML = '<i class="fas fa-key"></i> نسخ السر';
+        btn.style.background = '#f59e0b'; // لون برتقالي/أصفر
+        btn.dataset.step = '2';
+        
+        // تنبيه صغير
+        const toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        toast.fire({ icon: 'info', title: 'تم نسخ المعرف.. الآن اضغط لنسخ السر' });
+    } else {
+        // الخطوة 2: نسخ كلمة السر
+        await navigator.clipboard.writeText(tvPass);
+        btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
+        btn.style.background = '#10b981'; // لون أخضر
+        btn.dataset.step = '1'; // إعادة التعيين للطلب القادم
+        
+        // محاولة فتح البرنامج كإجراء إضافي (بدون تمرير البيانات المعطلة)
+        window.location.href = `teamviewer10://`;
+
+        const toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        toast.fire({ icon: 'success', title: 'تم نسخ كلمة السر! افتح البرنامج والصقها' });
+        
+        // إعادة الزر لشكلة الأصلي بعد 3 ثواني
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-play"></i> اتصال';
+            btn.style.background = '#3b82f6'; 
+        }, 3000);
     }
 };
 
-// 2. دالة عرض الطلبات المحدثة (8 أعمدة)
+// دالة عرض الطلبات المحدثة بالأعمدة الـ 8
 window.openSupportRequestsModal = async function() {
     try {
         const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("created_at", "desc"));
         const snapshot = await getDocs(q);
-        
         let tableRows = "";
-        
+
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
-            
-            let datePart = "---";
-            let timePart = "---";
-            if (d.created_at && typeof d.created_at.toDate === 'function') {
+            let dateStr = "---", timeStr = "---";
+            if (d.created_at?.toDate) {
                 const dt = d.created_at.toDate();
-                datePart = dt.toLocaleDateString('ar-DZ');
-                timePart = dt.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' });
+                dateStr = dt.toLocaleDateString('ar-DZ');
+                timeStr = dt.toLocaleTimeString('ar-DZ', { hour: '2-digit', minute: '2-digit' });
             }
 
             tableRows += `
-                <tr style="border-bottom: 1px solid #edf2f7; vertical-align: middle; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 12px 5px; text-align: center; color: #475569; font-size: 11px;">${datePart}</td>
-                    
-                    <td style="padding: 12px 5px; text-align: center; color: #64748b; font-size: 11px;">${timePart}</td>
-                    
-                    <td style="padding: 12px 10px; font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name || '---'}</td>
-                    
-                    <td style="padding: 12px 10px; color: #334155; font-size: 12px;">${d.director_name || '---'}</td>
-                    
+                <tr style="border-bottom: 1px solid #edf2f7; vertical-align: middle;">
+                    <td style="padding: 12px 5px; text-align: center; color: #64748b; font-size: 11px;">${dateStr}</td>
+                    <td style="padding: 12px 5px; text-align: center; color: #64748b; font-size: 11px;">${timeStr}</td>
+                    <td style="padding: 12px 10px; font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name}</td>
+                    <td style="padding: 12px 10px; color: #334155; font-size: 12px;">${d.director_name}</td>
+                    <td style="padding: 12px 10px; text-align: center; color: #0284c7; font-weight: bold; font-family: monospace;">${d.phone}</td>
                     <td style="padding: 12px 10px; text-align: center;">
-                        <span dir="ltr" style="color: #0284c7; font-weight: 600; font-family: monospace; font-size: 12px;">${d.phone || '---'}</span>
+                        <span style="font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold;">${d.tv_id}</span>
                     </td>
-                    
                     <td style="padding: 12px 10px; text-align: center;">
-                        <span style="font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px;">${d.tv_id}</span>
+                        <span style="font-family: monospace; background: #fffbeb; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold;">${d.tv_pass}</span>
                     </td>
-                    
-                    <td style="padding: 12px 10px; text-align: center;">
-                        <span style="font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px;">${d.tv_pass}</span>
-                    </td>
-                    
                     <td style="padding: 12px 10px; text-align: left;">
-                        <div style="display: flex; gap: 4px; justify-content: flex-end;">
-                            <button onclick="window.connectToTeamViewer('${d.tv_id}', '${d.tv_pass}')" 
-                                    style="background: #10b981; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                        <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                            <button onclick="window.smartCopy(this, '${d.tv_id}', '${d.tv_pass}')" 
+                                    style="background: #3b82f6; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; min-width: 90px; transition: 0.3s;">
                                 <i class="fas fa-play"></i> اتصال
                             </button>
                             <button onclick="window.closeSupportRequest('${docSnap.id}')" 
-                                    style="background: #ef4444; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
+                                    style="background: #ef4444; color: white; border: none; padding: 7px 10px; border-radius: 6px; cursor: pointer;">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -2965,41 +2963,31 @@ window.openSupportRequestsModal = async function() {
                 </tr>`;
         });
 
-        const noDataHtml = `<tr><td colspan="8" style="padding: 50px; text-align: center; color: #94a3b8;">لا توجد طلبات واردة حالياً</td></tr>`;
-
         Swal.fire({
-            title: '<div style="text-align: right; font-size: 18px; font-weight: 800; color: #1e293b;"><i class="fas fa-headset" style="color: #3b82f6; margin-left: 10px;"></i> قائمة طلبات الدعم الفني</div>',
+            title: '<b style="font-size:18px;">قائمة طلبات الدعم الفني</b>',
             width: '1200px',
             html: `
-                <div style="overflow-x: auto; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 10px; background: white;">
+                <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
                     <table style="width: 100%; border-collapse: collapse; direction: rtl; text-align: right;">
                         <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                             <tr>
-                                <th style="padding: 12px 5px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 90px;">التاريخ</th>
-                                <th style="padding: 12px 5px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 80px;">الوقت</th>
-                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800;">اسم المؤسسة</th>
-                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; width: 140px;">المدير</th>
-                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 110px;">الهاتف</th>
-                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 120px;">المعرف ID</th>
-                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 90px;">كلمة السر</th>
-                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: left; width: 140px;">الإجراء</th>
+                                <th style="padding: 12px 5px; text-align: center;">التاريخ</th>
+                                <th style="padding: 12px 5px; text-align: center;">الوقت</th>
+                                <th style="padding: 12px 10px;">المؤسسة</th>
+                                <th style="padding: 12px 10px;">المدير</th>
+                                <th style="padding: 12px 10px; text-align: center;">الهاتف</th>
+                                <th style="padding: 12px 10px; text-align: center;">ID</th>
+                                <th style="padding: 12px 10px; text-align: center;">PW</th>
+                                <th style="padding: 12px 10px; text-align: left;">الإجراء</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${tableRows || noDataHtml}
-                        </tbody>
+                        <tbody>${tableRows || '<tr><td colspan="8" style="padding:20px; text-align:center;">لا توجد طلبات</td></tr>'}</tbody>
                     </table>
-                </div>
-            `,
+                </div>`,
             showConfirmButton: false,
-            showCloseButton: true,
-            padding: '1rem'
+            showCloseButton: true
         });
-
-    } catch (error) {
-        console.error(error);
-        Swal.fire('خطأ', 'فشل تحميل البيانات', 'error');
-    }
+    } catch (e) { console.error(e); }
 };
 
 // 3. دالة إنهاء وحذف الطلب
@@ -3023,6 +3011,7 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
 
