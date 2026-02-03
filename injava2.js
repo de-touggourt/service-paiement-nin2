@@ -1852,6 +1852,7 @@ window.sendSupportRequest = async function() {
     // --- 4. تشغيل النافذة ومنطق الربط بين القوائم + التحقق الصارم ---
     const { value: formValues } = await Swal.fire({
         title: 'طلب دعم فني مباشر',
+        allowOutsideClick: false,
         html: htmlForm,
         width: '500px',
         showCancelButton: true,
@@ -2032,6 +2033,7 @@ window.sendSupportRequest = async function() {
         }
     }
 };
+
 
 
 
