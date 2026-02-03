@@ -1751,9 +1751,8 @@ window.sendSupportRequest = async function() {
   "تماسين": [{ name: "إبتدائية مولود فرعون - نماسين" }, { name: "إبتدائية الطالب السعدي بوخندق - نماسين" }, { name: "إبتدائية الشيخ الصغير التجاني - نماسين" }, { name: "إبتدائية الشيخ الصادق التجاني - نماسين" }, { name: "إبتدائية البشيرتاتي - نماسين" }, { name: "إبتدائية المجاهد بكوش محمد العيد - نماسين" }, { name: "إبتدائية المجاهد رزقان احمد - نماسين" }, { name: "إبتدائية المجاهد لبسيس إبراهيم - نماسين" }, { name: "إبتدائية بوبكري بشير - نماسين" }, { name: "إبتدائية بن قانة براهيم (البحور 2) - نماسين" }, { name: "إبتدائية المجاهد تجاني عبد الحق (حي الكودية ) - نماسين" }]
 };
 
-   // لقد قمت باختصارها هنا لتوضيح التغييرات البرمجية فقط
-    const institutionsByDaaira = window.institutionsByDaaira || {}; // تأكد من وجود البيانات
-    const primarySchoolsByBaladiya = window.primarySchoolsByBaladiya || {}; // تأكد من وجود البيانات
+  const institutionsByDaaira = window.institutionsByDaaira || {}; 
+    const primarySchoolsByBaladiya = window.primarySchoolsByBaladiya || {}; 
 
     // --- 2. وظائف الأزرار الجديدة (فتح / تحميل) ---
     window.openTV = function() {
@@ -1765,7 +1764,6 @@ window.sendSupportRequest = async function() {
     };
 
     // --- 3. تصميم واجهة النافذة (HTML) ---
-    // التعديل الأساسي هنا: إضافة wrapper للتحكم في الطول + فصل الأزرار
     const htmlForm = `
         <div style="direction:rtl; text-align:right; font-family:'Cairo', sans-serif;">
             
@@ -1866,39 +1864,59 @@ window.sendSupportRequest = async function() {
         confirmButtonText: 'إرسال الطلب',
         cancelButtonText: 'إلغاء',
         confirmButtonColor: '#28a745',
-        // إضافة: التأكد من أن النافذة تحسب ارتفاعها تلقائياً ولا تتجاوز الشاشة
-        heightAuto: false, 
+        heightAuto: false, // منع تمدد الصفحة
         customClass: {
-            popup: 'swal-fullscreen-fix' // يمكن استخدام هذا الكلاس في CSS إذا لزم الأمر
+            popup: 'swal-fullscreen-fix'
         },
         didOpen: () => {
-             // ... (نفس منطق القوائم المنسدلة السابق - لم يتغير) ...
+             // تعريف العناصر
              const levelSel = document.getElementById('sup-level');
              const daairaSel = document.getElementById('sup-daaira');
              const baladiyaSel = document.getElementById('sup-baladiya');
              const schoolSel = document.getElementById('sup-school');
 
-             // يرجى نسخ نفس كود تعبئة القوائم (forEach / addEventListener) الذي كتبناه سابقاً هنا
-             // لضمان عمل القوائم بشكل صحيح.
-             // ...
-             // كود الربط المختصر:
-             Object.keys(baladiyaMap).forEach(d => daairaSel.add(new Option(d, d)));
+             // تعبئة الدوائر
+             Object.keys(baladiyaMap).forEach(d => {
+                 daairaSel.add(new Option(d, d));
+             });
+
+             // عند تغيير الدائرة
              daairaSel.addEventListener('change', () => {
                  baladiyaSel.innerHTML = '<option value="">-- اختر --</option>';
-                 const sel = daairaSel.value;
-                 if(sel && baladiyaMap[sel]) baladiyaMap[sel].forEach(b => baladiyaSel.add(new Option(b, b)));
+                 const selectedDaaira = daairaSel.value;
+                 if(selectedDaaira && baladiyaMap[selectedDaaira]) {
+                     baladiyaMap[selectedDaaira].forEach(b => {
+                         baladiyaSel.add(new Option(b, b));
+                     });
+                 }
                  updateSchools();
              });
-             
+
+             // دالة تحديث المدارس
              function updateSchools() {
                  schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
                  const lvl = levelSel.value;
-                 const d = daairaSel.value;
-                 const b = baladiyaSel.value;
+                 const daaira = daairaSel.value;
+                 const baladiya = baladiyaSel.value;
+
                  if(!lvl) return;
-                 // (أعد وضع منطق جلب المدارس هنا)
-                 // ...
+
+                 let options = [];
+                 if (lvl === 'ابتدائي') {
+                     if (baladiya && primarySchoolsByBaladiya[baladiya]) {
+                         options = primarySchoolsByBaladiya[baladiya];
+                     }
+                 } else {
+                     if (daaira && institutionsByDaaira[daaira] && institutionsByDaaira[daaira][lvl]) {
+                         options = institutionsByDaaira[daaira][lvl];
+                     }
+                 }
+
+                 options.forEach(item => {
+                     schoolSel.add(new Option(item.name, item.name));
+                 });
              }
+
              baladiyaSel.addEventListener('change', updateSchools);
              levelSel.addEventListener('change', updateSchools);
         },
@@ -1950,19 +1968,41 @@ window.sendSupportRequest = async function() {
     if (formValues) {
         Swal.fire({ title: 'جاري الإرسال...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            // (نفس كود Firebase السابق للتحقق من التكرار والإضافة)
-            // ...
-            // مثال سريع:
-             const existingRequests = await db.collection("support_requests")
+            // التحقق من وجود طلب سابق معلق
+            const existingRequests = await db.collection("support_requests")
                 .where("school_name", "==", formValues.school)
-                .where("status", "==", "pending").get();
-             
-             if (!existingRequests.empty) {
-                 // عرض رسالة التكرار
-                 Swal.fire('تنبيه', 'يوجد طلب معلق لهذه المؤسسة', 'warning');
-                 return;
-             }
+                .where("status", "==", "pending")
+                .get();
 
+            if (!existingRequests.empty) {
+                const existingDoc = existingRequests.docs[0].data();
+                const requestDate = existingDoc.created_at ? 
+                                existingDoc.created_at.toDate().toLocaleString('ar-DZ') : 
+                                'غير محدد';
+
+                Swal.fire({
+                    icon: 'info',
+                    title: 'هذا الطلب موجود مسبقاً',
+                    html: `
+                        <div style="text-align: right; direction: rtl; font-size: 14px; line-height: 1.6;">
+                            <p>يوجد طلب دعم فني <b>قيد الانتظار</b> لهذه المؤسسة حالياً:</p>
+                            <hr>
+                            <ul style="list-style: none; padding: 0;">
+                                <li><b>المؤسسة:</b> ${existingDoc.school_name}</li>
+                                <li><b>المدير(ة):</b> ${existingDoc.director_name}</li>
+                                <li><b>تاريخ الطلب:</b> ${requestDate}</li>
+                            </ul>
+                            <hr>
+                            <p style="color: #d33; font-weight: bold; text-align: center;">يرجى الانتظار حتى يتم معالجته.</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'حسناً',
+                    confirmButtonColor: '#007bff'
+                });
+                return; 
+            }
+
+            // إضافة الطلب الجديد
             await db.collection("support_requests").add({
                 director_name: formValues.name,
                 phone: formValues.phone,
@@ -1975,14 +2015,15 @@ window.sendSupportRequest = async function() {
                 status: "pending",
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
             });
+            
             Swal.fire('تم بنجاح', 'تم إرسال طلبك بنجاح', 'success');
+
         } catch (e) {
             console.error(e);
-            Swal.fire('خطأ', 'حدث خطأ في الاتصال', 'error');
+            Swal.fire('خطأ', 'فشل في الاتصال بقاعدة البيانات', 'error');
         }
     }
 };
-
 
 
 
