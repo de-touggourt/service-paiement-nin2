@@ -1926,28 +1926,74 @@ window.sendSupportRequest = async function() {
     });
 
     // --- 5. إرسال البيانات إلى Firebase ---
-    if (formValues) {
-        Swal.fire({ title: 'جاري الإرسال...', didOpen:()=>Swal.showLoading() });
-        try {
-            await db.collection("support_requests").add({
-                director_name: formValues.name,
-                phone: formValues.phone,
-                level: formValues.level,
-                daaira: formValues.daaira,
-                baladiya: formValues.baladiya,
-                school_name: formValues.school,
-                tv_id: formValues.tvId,
-                tv_pass: formValues.tvPass,
-                status: "pending",
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
-            });
+  // --- 5. إرسال البيانات إلى Firebase مع عرض تفاصيل الطلب السابق ---
+if (formValues) {
+    Swal.fire({ 
+        title: 'جاري التحقق من حالة الطلب...', 
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading() 
+    });
+
+    try {
+        // البحث عن طلب معلق لنفس المؤسسة
+        const existingRequests = await db.collection("support_requests")
+            .where("school_name", "==", formValues.school)
+            .where("status", "==", "pending")
+            .get();
+
+        if (!existingRequests.empty) {
+            // استخراج بيانات أول طلب موجود في القائمة
+            const existingDoc = existingRequests.docs[0].data();
             
-            Swal.fire('تم بنجاح', 'وصل طلبك، يرجى إبقاء برنامج TeamViewer مفتوحاً', 'success');
-        } catch (e) {
-            console.error(e);
-            Swal.fire('خطأ', 'فشل في إرسال الطلب، يرجى التحقق من الإنترنت', 'error');
+            // تحويل التاريخ من Firebase Timestamp إلى صيغة مقروءة
+            const requestDate = existingDoc.created_at ? 
+                                existingDoc.created_at.toDate().toLocaleString('ar-DZ') : 
+                                'غير محدد';
+
+            Swal.fire({
+                icon: 'info',
+                title: 'هذا الطلب موجود مسبقاً',
+                html: `
+                    <div style="text-align: right; direction: rtl; font-size: 14px; line-height: 1.6;">
+                        <p>يوجد طلب دعم فني <b>قيد الانتظار</b> لهذه المؤسسة حالياً:</p>
+                        <hr>
+                        <ul style="list-style: none; padding: 0;">
+                            <li><b>المؤسسة:</b> ${existingDoc.school_name}</li>
+                            <li><b>المدير(ة):</b> ${existingDoc.director_name}</li>
+                            <li><b>تاريخ الطلب:</b> ${requestDate}</li>
+                        </ul>
+                        <hr>
+                        <p style="color: #d33; font-weight: bold; text-align: center;">يرجى عدم تكرار الطلب والانتظار حتى يتم معالجته أو حذفه.</p>
+                    </div>
+                `,
+                confirmButtonText: 'حسناً',
+                confirmButtonColor: '#007bff'
+            });
+            return; 
         }
+
+        // إرسال الطلب الجديد إذا لم يوجد تكرار
+        await db.collection("support_requests").add({
+            director_name: formValues.name,
+            phone: formValues.phone,
+            level: formValues.level,
+            daaira: formValues.daaira,
+            baladiya: formValues.baladiya,
+            school_name: formValues.school,
+            tv_id: formValues.tvId,
+            tv_pass: formValues.tvPass,
+            status: "pending",
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        Swal.fire('تم بنجاح', 'وصل طلبك، يرجى إبقاء البرنامج مفتوحاً', 'success');
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('خطأ', 'فشل في الاتصال بقاعدة البيانات', 'error');
     }
+}
 };
+
 
 
