@@ -2880,73 +2880,80 @@ window.startSupportListener = function() {
     }
 };
 
-// 2. دالة فتح نافذة الطلبات عند الضغط على الزر
 // ==========================================
-// 🛠️ دالة الاتصال الذكي بـ TeamViewer
+// 🛠️ دالة مساعدة لنسخ النصوص (للمعرف وكلمة السر في الجدول)
 // ==========================================
-// 1. الدالة المسؤولة عن الاتصال والنسخ الذكي
-// ==========================================
-// 🛠️ دالة النسخ والاتصال الذكي (المعدلة)
-// ==========================================
-window.connectToTeamViewer = async function(btn, tvId, tvPass) {
-    const cleanId = tvId.replace(/\s/g, ''); // تنظيف المعرف من الفراغات
-    
-    // التحقق من الخطوة الحالية عبر خاصية dataset
-    const step = btn.dataset.step || '1';
-
+window.copyData = async function(text, type) {
     try {
-        if (step === '1') {
-            // الخطوة 1: نسخ المعرف ID
-            await navigator.clipboard.writeText(cleanId);
-            
-            // تغيير مظهر الزر لإعلامك بالخطوة التالية
-            btn.innerHTML = '<i class="fas fa-key"></i> نسخ السر';
-            btn.style.background = '#f59e0b'; // لون برتقالي (تحذيري للخطوة التالية)
-            btn.dataset.step = '2';
+        await navigator.clipboard.writeText(text);
+        const title = type === 'id' ? 'تم نسخ المعرف' : 'تم نسخ كلمة السر';
+        
+        // تنبيه صغير وسريع
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
 
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'info',
-                title: 'تم نسخ المعرف! الصقه ثم اضغط للسر',
-                showConfirmButton: false,
-                timer: 2500
-            });
-        } else {
-            // الخطوة 2: نسخ كلمة السر PW
-            await navigator.clipboard.writeText(tvPass);
-            
-            // إعادة الزر لحالته الأصلية أو حالة النجاح
-            btn.innerHTML = '<i class="fas fa-check"></i> تم النسخ';
-            btn.style.background = '#10b981'; // لون أخضر (نجاح)
-            btn.dataset.step = '1';
-
-            // محاولة فتح البرنامج (بدون تمرير المعرف المعطل أمنياً)
-            window.location.href = `teamviewer10://`;
-
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: 'تم نسخ كلمة السر! جاهز للصق الآن',
-                showConfirmButton: false,
-                timer: 2500
-            });
-
-            // إعادة شكل الزر الأصلي بعد فترة قصيرة
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-play"></i> اتصال';
-                btn.style.background = '#10b981';
-            }, 3000);
-        }
+        Toast.fire({
+            icon: 'success',
+            title: title
+        });
     } catch (err) {
-        console.error('فشل عملية النسخ:', err);
-        Swal.fire('خطأ', 'يرجى إعطاء صلاحية الوصول للحافظة', 'error');
+        console.error('فشل النسخ', err);
     }
 };
 
 // ==========================================
-// 📋 دالة عرض نافذة الطلبات (8 أعمدة)
+// 🚀 دالة الاتصال الذكي (المعدلة كلياً)
+// ==========================================
+window.connectToTeamViewer = async function(btn, tvId, tvPass) {
+    const cleanId = tvId.replace(/\s/g, ''); // إزالة الفراغات
+
+    try {
+        // 1. نسخ المعرف ID إلى الحافظة (بناءً على طلبك)
+        await navigator.clipboard.writeText(cleanId);
+
+        // تغيير شكل الزر لحظياً
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الفتح...';
+        btn.style.background = '#3b82f6'; // لون أزرق
+
+        // 2. محاولة فتح تيم فيور وتمرير المعرف
+        // ملاحظة: هذا البروتوكول يحاول وضع المعرف في خانة الشريك
+        window.location.href = `teamviewer10://control?device=${cleanId}`;
+
+        // إشعار للمستخدم
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'تم نسخ المعرف وجاري فتح البرنامج!',
+            text: 'إذا لم يظهر المعرف تلقائياً، قم بلصقه (Ctrl+V)',
+            showConfirmButton: false,
+            timer: 4000
+        });
+
+        // إعادة الزر لحالته الطبيعية بعد 3 ثواني
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = '#10b981';
+        }, 3000);
+
+    } catch (err) {
+        console.error('Error:', err);
+        Swal.fire('تنبيه', 'يرجى السماح بالوصول للحافظة', 'warning');
+    }
+};
+
+// ==========================================
+// 📋 دالة عرض نافذة الطلبات (المحدثة)
 // ==========================================
 window.openSupportRequestsModal = async function() {
     try {
@@ -2980,20 +2987,28 @@ window.openSupportRequestsModal = async function() {
                     </td>
                     
                     <td style="padding: 12px 10px; text-align: center;">
-                        <span style="font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px;">${d.tv_id}</span>
+                        <span onclick="window.copyData('${d.tv_id}', 'id')" 
+                              title="اضغط لنسخ المعرف"
+                              style="cursor: pointer; font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block;">
+                            ${d.tv_id} <i class="far fa-copy" style="font-size: 10px; color: #94a3b8;"></i>
+                        </span>
                     </td>
                     
                     <td style="padding: 12px 10px; text-align: center;">
-                        <span style="font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px;">${d.tv_pass}</span>
+                        <span onclick="window.copyData('${d.tv_pass}', 'pass')"
+                              title="اضغط لنسخ كلمة السر"
+                              style="cursor: pointer; font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block;">
+                            ${d.tv_pass} <i class="far fa-copy" style="font-size: 10px; color: #d97706;"></i>
+                        </span>
                     </td>
                     
                     <td style="padding: 12px 10px; text-align: left;">
                         <div style="display: flex; gap: 4px; justify-content: flex-end;">
                             <button onclick="window.connectToTeamViewer(this, '${d.tv_id}', '${d.tv_pass}')" 
-                                    data-step="1"
                                     style="background: #10b981; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; min-width: 95px; transition: 0.3s; display: flex; align-items: center; gap: 4px; justify-content: center;">
                                 <i class="fas fa-play"></i> اتصال
                             </button>
+                            
                             <button onclick="window.closeSupportRequest('${docSnap.id}')" 
                                     style="background: #ef4444; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
                                 <i class="fas fa-trash-alt"></i>
@@ -3039,6 +3054,7 @@ window.openSupportRequestsModal = async function() {
         Swal.fire('خطأ', 'فشل تحميل البيانات', 'error');
     }
 };
+
 // 3. دالة إنهاء وحذف الطلب
 window.closeSupportRequest = async function(id) {
     const result = await Swal.fire({
@@ -3060,6 +3076,7 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
 
