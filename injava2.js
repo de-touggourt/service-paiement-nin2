@@ -1,4 +1,5 @@
 
+
 // ============================================================
 // كود استقبال الإشارة السرية (postMessage)
 // ============================================================
@@ -1665,7 +1666,7 @@ function printCurrentTable(schoolName) {
 
             <div style="margin-top: 40px; display: flex; justify-content: flex-end; padding-left: 50px;">
                 <div style="text-align: left; font-weight: bold; font-size: 16px;">
-                    <p style="margin-bottom: 15px;">حرر بـ : ${baladiya}     في: ${dateStr}</p>
+                    <p style="margin-bottom: 15px;">حرر بـ : ${baladiya}     في: ${dateStr}</p>
                     <p>المدير(ة):</p>
                 </div>
             </div>
@@ -1708,145 +1709,168 @@ function exportTableToExcel(tableId, filename = 'export') {
 // ============================================================
 // دالة إرسال طلب المساعدة (TeamViewer) - معدلة وشاملة
 // ============================================================
-// ============================================================
-// دالة إرسال طلب المساعدة (TeamViewer) - النسخة المصححة
-// ============================================================
 window.sendSupportRequest = async function() {
-    
-    // 1. استدعاء البيانات العامة (بدلاً من إعادة كتابتها وتسبب الخطأ)
+    // --- 1. تعريف خرائط البيانات (يمكنك تعديل الأسماء هنا) ---
     const baladiyaMap = { "توقرت": ["توقرت", "النزلة", "تبسبست", "الزاوية العابدية"], "تماسين": ["تماسين", "بلدة عمر"], "المقارين": ["المقارين", "سيدي سليمان"], "الحجيرة": ["الحجيرة", "العالية"], "الطيبات": ["الطيبات", "المنقر", "ابن ناصر"] };
 
-    // --- تصحيح الخطأ هنا: نعتمد على المتغيرات العامة بدلاً من إعادة تعريفها ---
-    const institutionsByDaaira = window.institutionsByDaaira || {}; 
-    const primarySchoolsByBaladiya = window.primarySchoolsByBaladiya || {}; 
-
-    // 2. تعريف وظائف الأزرار (فتح / تحميل)
-    window.openTV = function() {
-        window.location.href = "teamviewer8://";
+    const institutionsByDaaira = {
+        "توقرت": {
+    "متوسط": [{ name: "متوسطة سعد بن أبي وقاص – توقرت" }, { name: "متوسطة الإمام علي – توقرت" }, { name: "متوسطة محمد الأمين العمودي – توقرت" }, { name: "متوسطة الشيخ المقراني – تبسبست" }, { name: "متوسطة بن هدية المدني – النزلة" }, { name: "متوسطة عبد الحميد بن باديس – توقرت" }, { name: "متوسطة حمزة بن عبد المطلب – الزاوية العابدية" }, { name: "متوسطة نصرات حشاني – تبسبست" }, { name: "متوسطة عيسات ايدير – البهجة تبسبست" }, { name: "متوسطة تجيني محمد – عين الصحراء النزلة" }, { name: "متوسطة ابن رشد – حي العرقوب توقرت" }, { name: "متوسطة رضا حوحو – الزاوية العابدية" }, { name: "متوسطة ميعادي فخر الدين – النزلة" }, { name: "متوسطة عطالي محمد الصغير – سيدي مهدي النزلة" }, { name: "متوسطة محمد عمران بوليفة – حي الرمال توقرت" }, { name: "متوسطة عبد المؤمن بن علي – النزلة" }, { name: "متوسطة بن الزاوي علي – تبسبست" }, { name: "متوسطة البشير الإبراهيمي – توقرت" }, { name: "متوسطة حي 5 جويلية – الزاوية العابدية" }, { name: "متوسطة بن حيزية عبد الله – عين الصحراء النزلة" }, { name: "متوسطة بن قلية محمد – الزاوية العابدية" }, { name: "متوسطة تمرني محمد – توقرت" }, { name: "متوسطة شاوش محمد – تبسبست" }, { name: "متوسطة المجاهد التجاني الصادق – النزلة" }, { name: "متوسطة خروبي محمد لخضر – النزلة" }, { name: "متوسطة المجاهد سبقاق العيد – توقرت" }, { name: "متوسطة دقعة الطاهر – تبسبست" }, { name: "متوسطة بدودة معمر بن علي – النزلة" }, { name: "متوسطة داشر الحاج – حي المستقبل توقرت" }, { name: "متوسطة المجاهد رواص محمد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد بوليفة محمد العيد – حي المستقبل توقرت" }, { name: "متوسطة المجاهد عماري السايح – حي المستقبل توقرت" }],
+    "ثانوي": [{ name: "ثانوية الأمير عبد القادر – توقرت" }, { name: "ثانوية عبد الرحمان الكواكبي – تبسبست" }, { name: "ثانوية الحسن بن الهيثم – النزلة" }, { name: "ثانوية البشير الإبراهيمي – تبسبست" }, { name: "ثانوية هواري بومدين – الزاوية العابدية" }, { name: "ثانوية أبو بكر بلقايد – النزلة" }, { name: "ثانوية لزهاري تونسي – الزاوية العابدية" }, { name: "ثانوية بوخاري عبد المالك – النزلة" }, { name: "ثانوية عبودة علي – حي المستقبل توقرت" }, { name: "ثانوية مسغوني محمد الصالح – حي المستقبل" }]
+  },
+  "الحجيرة": {
+    "متوسط": [{ name: "متوسطة ابن سينا – الحجيرة" }, { name: "متوسطة لخضاري لخضر – العالية" }, { name: "متوسطة زوابري مسعود – لقراف الحجيرة" }, { name: "متوسطة السايح بن عيسى محمد السايح – العالية" }, { name: "متوسطة بن شويحة حمزة – الحجيرة" }, { name: "متوسطة شلغوم بشير – الشقة العالية" }, { name: "متوسطة المجاهد شعيب الأخضر – الحجيرة" }],
+    "ثانوي": [{ name: "ثانوية طارق بن زياد – الحجيرة" }, { name: "ثانوية بساسي محمد الصغير – العالية" }, { name: "ثانوية لحسيني محمد – الحجيرة" }, { name: "ثانوية بالضياف محمد – لقراف الحجيرة" }]
+  },
+  "الطيبات": {
+    "متوسط": [{ name: "متوسطة أحمد زبانة – الطيبات" }, { name: "متوسطة موسى بن نصير – المنقر" }, { name: "متوسطة طارق بن زياد – بن ناصر" }, { name: "متوسطة نتاري محمد الدليلعي – الطيبات" }, { name: "متوسطة العقون محمد الكبير – الطيبات" }, { name: "متوسطة معمري محمد – بن ناصر" }, { name: "متوسطة العيد زقرير – المنقر" }, { name: "متوسطة بلعجال أحمد – الخبنة الطيبات" }, { name: "متوسطة المجاهد الخذير أحمد – المنقر" }, { name: "متوسطة المجاهد رابحي العيد – المنقر" }, { name: "متوسطة المجاهد بكاري عبد القادر – الدليليعي الطيبات" }],
+    "ثانوي": [{ name: "ثانوية ابن رشيق القيرواني – الطيبات" }, { name: "ثانوية المنقر – دقعة علي المنقر" }, { name: "ثانوية عبيد أحمد – بن ناصر" }, { name: "ثانوية زقوني الصغير – الدليليعي الطيبات" }]
+  },
+  "المقارين": {
+    "متوسط": [{ name: "متوسطة الفرابي – المقارين" }, { name: "متوسطة طفحي مسعود – سيدي سليمان" }, { name: "متوسطة بلحارث محمد السايح – سيدي سليمان" }, { name: "متوسطة سوفي الهاشمي – الطيبات" }, { name: "متوسطة الشهيد عبد الرحمان قوتال – القصور المقارين" }, { name: "متوسطة الشهيد أحميدة بوحفص – المقارين" }, { name: "متوسطة بركبية عبد الرزاق – المقارين" }, { name: "متوسطة الشهيد تماسيني عبد الرحمان – لهريهيرة المقارين" }],
+    "ثانوي": [{ name: "ثانوية خالد بن الوليد – المقارين" }, { name: "ثانوية بن عمر النوي – سيدي سليمان" }, { name: "ثانوية عميش سعدون – المقارين" }]
+  },
+  "تماسين": {
+    "متوسط": [{ name: "متوسطة عمر بن الخطاب – تماسين" }, { name: "متوسطة مولاتي محمد السايح – بلدة عمر" }, { name: "متوسطة أبو بكر الرازي – البحور تماسين" }, { name: "متوسطة قوني محمد الطيب – سيدي عامر تماسين" }, { name: "متوسطة معركة قرداش – بلدة عمر" }, { name: "متوسطة محمد الصديق بن يحي – حي الكدية تماسين" }, { name: "متوسطة بركة عبد الرزاق – قوق بلدة عمر" }, { name: "متوسطة بدودة السايح – تملاحت تماسين" }, { name: "متوسطة علي بن باديس – قوق بلدة عمر" }],
+    "ثانوي": [{ name: "ثانوية مفدي زكريا – تماسين" }, { name: "ثانوية العيد بن الصحراوي – بلدة عمر" }, { name: "ثانوية قويدري محمد العيد – تماسين" }, { name: "ثانوية تجيني محمد لخضر – بلدة عمر" }, { name: "ثانوية مالك بن نبي – قوق" }]
+  }
     };
 
-    window.downloadTV = function() {
-        window.open("https://download.teamviewer.com/download/TeamViewerQS.exe", "_blank");
-    };
+    const primarySchoolsByBaladiya = {
+  "ابن ناصر": [{ name: "إبتدائية عبد الحميد بن باديس - إبن ناصر" }, { name: "إبتدائية العربي التبسي - إبن ناصر" }, { name: "إبتدائية البشير الابراهيمي - إبن ناصر" }, { name: "إبتدائية هواري بومدين - إبن ناصر" }, { name: "إبتدائية المجاهد الصادق خلفاوي - إبن ناصر" }, { name: "إبتدائية المجاهد سراي مسعود ( المر) - إبن ناصر" }, { name: "إبتدائية المجاهد اليمان الطيب - إبن ناصر" }, { name: "إبتدائية المجاهد العقون خليفة - إبن ناصر" }, { name: "إبتدائية المجاهد قحمص محمد بن العيد - إبن ناصر" }, { name: "إبتدائية 13 مارس 1962 - إبن ناصر" }, { name: "إبتدائية اللأمير عبد القادر - إبن ناصر" }, { name: "إبتدائية العقبي الطيب - إبن ناصر" }],
+  "الحجيرة": [{ name: "إبتدائية ابن باديس - الحجيرة" }, { name: "إبتدائية ديدوش مراد - الحجيرة" }, { name: "إبتدائية نعام سليمان - الحجيرة" }, { name: "إبتدائية محمد العيد آل خليفة - الحجيرة" }, { name: "إبتدائية العيد بن الشيخ - الحجيرة" }, { name: "إبتدائية البشير الابراهيمي - الحجيرة" }, { name: "إبتدائية مصطفى بن بولعيد - الحجيرة" }, { name: "إبتدائية الشهيد الكاس - الحجيرة" }, { name: "إبتدائية صلاح الدين الأيوبي - الحجيرة" }, { name: "إبتدائية ابن خلدون - الحجيرة" }, { name: "إبتدائية علي عمار - الحجيرة" }, { name: "إبتدائية دومة أحمد - الحجيرة" }, { name: "إبتدائية عمار ياسف - الحجيرة" }, { name: "إبتدائية المجاهد كحول احمد - الحجيرة" }, { name: "إبتدائية كريبع مسعود - الحجيرة - - الحجيرة" }, { name: "إبتدائية المجاهد بالأعور العلمي ( لقراف الجديدة 2) - الحجيرة" }, { name: "إبتدائية مجمع مدرسي حي المير - الحجيرة" }, { name: "إبتدائية خنفر محمد لحسن - الحجيرة" }, { name: "إبتدائية حي بوضياف محمد لقراف - الحجيرة" }, { name: "إبتدائية محدادي العيد - الحجيرة" }],
+  "الزاوية العابدية": [{ name: "إبتدائية البحري بن المنور القديمة - الزاوية العابدية" }, { name: "إبتدائية مصطفى بن بولعيد - الزاوية العابدية" }, { name: "إبتدائية بوليفة محمد عمران - الزاوية العابدية" }, { name: "إبتدائية صولي عبد الرحمان ( 5 جويلية) - الزاوية العابدية" }, { name: "إبتدائية بشير كدة - الزاوية العابدية" }, { name: "إبتدائية عبد الرحمان بن نونة - الزاوية العابدية" }, { name: "إبتدائية عقبة بن نافع - الزاوية العابدية" }, { name: "إبتدائية المجاهد محمد الاخضر بن لمنور - الزاوية العابدية" }, { name: "إبتدائية غول محمد الصالح (حي السلام) - الزاوية العابدية" }, { name: "إبتدائية محمد مقداد - الزاوية العابدية" }, { name: "إبتدائية احمد بن لمنور - الزاوية العابدية" }],
+  "الطيبات": [{ name: "إبتدائية الاستاذ عمر بن عزة - الطيبات" }, { name: "إبتدائية المجاهد عماري معمر - الطيبات" }, { name: "إبتدائية الشهيد قحمص محمد - الطيبات" }, { name: "إبتدائية العلامة حمداوي محمد بن سليمان(القواشيش) - الطيبات" }, { name: "إبتدائية ميلود تريش(بكار القديمة) - الطيبات" }, { name: "إبتدائية المجاهد زقوني بشير - الطيبات" }, { name: "إبتدائية المجاهد مراد معمر( برحمون) - الطيبات" }, { name: "إبتدائية الشهيد محمد الشين - الطيبات" }, { name: "إبتدائية قعبي علي (بئر العسل) - الطيبات" }, { name: "إبتدائية الشهيد بالطاهر الطيب - الطيبات" }, { name: "إبتدائية المجاهد منصوري مبروك - الطيبات" }, { name: "إبتدائية الشهيد بن قلية عمر - الطيبات" }, { name: "إبتدائية المجاهد رواص أحمد - الطيبات" }, { name: "إبتدائية المجاهد دحدي مسعود - الطيبات" }, { name: "إبتدائية المجاهد خليفة خليفة - الطيبات" }, { name: "إبتدائية المجاهد براهمي براهيم - الطيبات" }, { name: "إبتدائية المجاهد بلخير السعيد - الطيبات" }, { name: "إبتدائية المجاهد لـيـتيم محمد (عثمان بن عفان) - الطيبات" }, { name: "إبتدائية المجاهد بالعجال معمر - الطيبات" }, { name: "إبتدائية المجاهد عماري التجاني الدليعي - الطيبات" }],
+  "العالية": [{ name: "إبتدائية الشهيد قوادري لخضر - العالية" }, { name: "إبتدائية قادري أحمد - العالية" }, { name: "إبتدائية الامام الغزالي بالعالية - العالية" }, { name: "إبتدائية الشهيد عبيدلي أحمد - العالية" }, { name: "إبتدائية سيدي عبد المالك - العالية" }, { name: "إبتدائية بن احمد احمد - العالية" }, { name: "إبتدائية طفحي مسعود ( العالية الجديدة ) - العالية" }, { name: "إبتدائية غبائشي بشير - العالية" }, { name: "إبتدائية المجاهد بساسي الطاهر - العالية" }, { name: "إبتدائية حمايمي ميلود - العالية" }, { name: "إبتدائية المجاهد حبي عمار - العالية" }, { name: "إبتدائية المجاهد ربروب محمد - العالية" }],
+  "المقارين": [{ name: "إبتدائية أسامة بن زيد - المقارين" }, { name: "إبتدائية بن موسى الطيب - المقارين" }, { name: "إبتدائية العقيد سي الحواس - المقارين" }, { name: "إبتدائية ابو عبيدة بن الجراح - المقارين" }, { name: "إبتدائية بشير خذران - المقارين" }, { name: "إبتدائية محمد شافو - المقارين" }, { name: "إبتدائية بركبية حسين - المقارين" }, { name: "إبتدائية الشهيد الشريف محمد بن عبد الله - المقارين" }, { name: "إبتدائية بابا سعيد حشاني ( المجمع المدرسي الجديد ) - المقارين" }, { name: "إبتدائية المجاهد بن الزاوي السعيد - المقارين" }, { name: "إبتدائية المجاهد جاوي محمد - المقارين" }],
+  "المنقر": [{ name: "إبتدائية محمد بوعسرية - المنقر" }, { name: "إبتدائية الشهيد مسماري الاخضر اللويبد - المنقر" }, { name: "إبتدائية الشهيد قبي بلقاسم - المنقر" }, { name: "إبتدائية العلامة بن الصديق علي - المنقر" }, { name: "إبتدائية الشهيد خورارة بشير - المنقر" }, { name: "إبتدائية شوية علي - المنقر" }, { name: "إبتدائية الشهيدبكاري السايح الشابي - المنقر" }, { name: "إبتدائية الشهيد محمد خيراني - المنقر" }, { name: "إبتدائية المجاهد احمد بن الصغير قويدري (البحري) - المنقر" }, { name: "إبتدائية الشلالقة( خورارة محمد) - المنقر" }, { name: "إبتدائية نواري محمد الزروق - المنقر" }, { name: "إبتدائية الشهيد دقعة محمد - المنقر" }, { name: "إبتدائية الشهيد محمد نواري( حي النخيل) - المنقر" }, { name: "إبتدائية محمد مايو - المنقر" }, { name: "إبتدائية غندير العايش - المنقر" }, { name: "إبتدائية الشهيد بله محمد الصغير - المنقر" }],
+  "النزلة": [{ name: "إبتدائية بن دلالي علي - النزلة" }, { name: "إبتدائية قادري أحمد سيدي ماضي - النزلة" }, { name: "إبتدائية بن عمر النوي - النزلة" }, { name: "إبتدائية بن طرية لمنور - النزلة" }, { name: "إبتدائية بوليفة محمد عمران - النزلة" }, { name: "إبتدائية تماسيني عبد الرحمن - النزلة" }, { name: "إبتدائية كدة بشير - النزلة" }, { name: "إبتدائية حركات العايش - النزلة" }, { name: "إبتدائية المجاهد طرية مخلوف - النزلة" }, { name: "إبتدائية المجاهد قمو محمد - النزلة" }, { name: "إبتدائية تمرني موسى - النزلة" }, { name: "إبتدائية المجاهد سلامي محمد - النزلة" }, { name: "إبتدائية نقودي محمد - النزلة" }, { name: "إبتدائية المجاهد العيفاوي التجاني - النزلة" }, { name: "إبتدائية المجاهد عقال عبد الحميد - النزلة" }, { name: "إبتدائية المجاهد عشاب محمد العيد - النزلة" }, { name: "إبتدائية المجاهد فرحي بحري - النزلة" }, { name: "إبتدائية الشيخ بوعمامة - النزلة" }, { name: "إبتدائية رحماني محمد بن محمد - النزلة" }, { name: "إبتدائية المجاهد كراش الأخضر - النزلة" }, { name: "إبتدائية المجاهد بن حميدة علي - النزلة" }, { name: "إبتدائية بن هدية جاب الله ( المستقبل2) - النزلة" }, { name: "إبتدائية المجاهد مشري غزال - النزلة" }, { name: "إبتدائية بن عاشور السبتي - النزلة" }, { name: "إبتدائية علوي حمزة - النزلة" }, { name: "إبتدائية المجاهد قمو محمود - النزلة" }],
+  "بلدة عمر": [{ name: "إبتدائية محمد البشير الإبراهيمي - بلدة اعمر" }, { name: "إبتدائية دحماني عبد الرحمان قوق - بلدة اعمر" }, { name: "إبتدائية بديار محمد - بلدة اعمر" }, { name: "إبتدائية المجاهد قادري موسى - بلدة اعمر" }, { name: "إبتدائية المجاهد الاخضري احمد - بلدة اعمر" }, { name: "إبتدائية المجاهد تمرني عمار(حي النهضة) - بلدة اعمر" }, { name: "إبتدائية المجاهد زروقي علي - بلدة اعمر" }, { name: "إبتدائية المجاهد حاجي عمر - بلدة اعمر" }, { name: "إبتدائية الشهيد مصطفى بن بولعيد قوق - بلدة اعمر" }, { name: "إبتدائية المجاهد شاشة محمد الصغير - بلدة اعمر" }],
+  "تبسبست": [{ name: "إبتدائية محمد عشبي - تبسبست" }, { name: "إبتدائية زنو عبد الحفيظ - تبسبست" }, { name: "إبتدائية جواد عمر (تبسبست الجنوبية ) - تبسبست" }, { name: "إبتدائية بن علي الاخضر (بني يسود القديمة) - تبسبست" }, { name: "إبتدائية جيلاني كينة - تبسبست" }, { name: "إبتدائية التجاني نصيري - تبسبست" }, { name: "إبتدائية بن دومة محمد الطاهر - تبسبست" }, { name: "إبتدائية جلابية عبد القادر - تبسبست" }, { name: "إبتدائية المجاهد أحمد شاوش - تبسبست" }, { name: "إبتدائية حي الصومام - تبسبست" }, { name: "إبتدائية المجاهد بوغرارة محمد الصالح - تبسبست" }, { name: "إبتدائية الفتح الجديدة (جرو بحري) - تبسبست" }, { name: "إبتدائية المجاهد العياط سعد - تبسبست" }, { name: "إبتدائية أول نوفمبر 1954 - تبسبست" }, { name: "إبتدائية المجاهد رمون جلول حي فرجمون - تبسبست" }],
+  "توقرت": [{ name: "إبتدائية بن خلدون - تقرت" }, { name: "إبتدائية الخنساء - تقرت" }, { name: "إبتدائية الشيخ الطاهر العبيدي - تقرت" }, { name: "إبتدائية عظامو محمد البحري - تقرت" }, { name: "إبتدائية الطالب بابا - تقرت" }, { name: "إبتدائية الإمام الشافعي - تقرت" }, { name: "إبتدائية الامام مالك - تقرت" }, { name: "إبتدائية عبيدلي أحمد - تقرت" }, { name: "إبتدائية عيادي علي - تقرت" }, { name: "إبتدائية ناصر بشير - تقرت" }, { name: "إبتدائية المجاهد موهوبي سليمان - تقرت" }, { name: "إبتدائية المجاهد احمد بورنان - تقرت" }, { name: "إبتدائية بن الصديق عبد الهادي (الرمال 1) - تقرت" }, { name: "إبتدائية الشهيد زابي عبد العالي - تقرت" }, { name: "إبتدائية الأمير عبد القادر الجديدة - تقرت" }, { name: "إبتدائية ميعادي محمد فخر الدين - تقرت" }, { name: "إبتدائية تاتاي محمد الصادق (الرمال 02) - تقرت" }, { name: "إبتدائية المجاهد كافي عبد الرحيم - تقرت" }, { name: "إبتدائية المجاهد عظامو محمد - تقرت" }, { name: "إبتدائية بولعراس ابراهيم - تقرت" }, { name: "إبتدائية حي النضال مجمع مدرسي حي 1190 مسكن - تقرت" }, { name: "إبتدائية عمان يوسف - تقرت" }, { name: "إبتدائية دباخ أحمد المستقبل الجنوبي 7 - تقرت" }, { name: "إبتدائية بالعيد مشري المستقبل الشمالي - تقرت" }, { name: "إبتدائية دباغ عمر المستقبل الجنوبي 09 - تقرت" }, { name: "إبتدائية تاتاي عبد القادر - تقرت" }, { name: "إبتدائية الشهيد بالطاهر علي المستقبل الشمالي - تقرت" }, { name: "إبتدائية المجاهد قادري علال حي 700 مسكن - تقرت" }],
+  "سيدي سليمان": [{ name: "إبتدائية بوسعادة بن دلالي - سيدي سليمان" }, { name: "إبتدائية العربي التبسي - سيدي سليمان" }, { name: "إبتدائية الطيب بوريالة - سيدي سليمان" }, { name: "إبتدائية بركبية محمد بكار - سيدي سليمان" }, { name: "إبتدائية الشهيد بن قطان السايح - سيدي سليمان" }, { name: "إبتدائية باسو السعيد - سيدي سليمان" }],
+  "تماسين": [{ name: "إبتدائية مولود فرعون - نماسين" }, { name: "إبتدائية الطالب السعدي بوخندق - نماسين" }, { name: "إبتدائية الشيخ الصغير التجاني - نماسين" }, { name: "إبتدائية الشيخ الصادق التجاني - نماسين" }, { name: "إبتدائية البشيرتاتي - نماسين" }, { name: "إبتدائية المجاهد بكوش محمد العيد - نماسين" }, { name: "إبتدائية المجاهد رزقان احمد - نماسين" }, { name: "إبتدائية المجاهد لبسيس إبراهيم - نماسين" }, { name: "إبتدائية بوبكري بشير - نماسين" }, { name: "إبتدائية بن قانة براهيم (البحور 2) - نماسين" }, { name: "إبتدائية المجاهد تجاني عبد الحق (حي الكودية ) - نماسين" }]
+};
 
-    // 3. تصميم واجهة النافذة (HTML)
+    // --- 2. تصميم واجهة النافذة (HTML) مع قيود الإدخال ---
     const htmlForm = `
         <div style="direction:rtl; text-align:right; font-family:'Cairo', sans-serif;">
+            <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9; color:#0d47a1; text-align:center;">
+                <i class="fas fa-info-circle"></i> يرجى ملء بيانات المدير والمؤسسة لتسهيل عملية الدعم
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">الاسم واللقب الكامل</label>
+                    <input id="sup-name" class="swal2-input" placeholder="بالحروف العربية فقط" style="width:100%; margin:5px 0; height:35px; font-size:13px;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">رقم الهاتف</label>
+                    <input id="sup-name" style="display:none"> <input id="sup-phone" type="tel" class="swal2-input" placeholder="06XXXXXXXX" maxlength="10" 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                           style="width:100%; margin:5px 0; height:35px; font-size:13px; direction:ltr;">
+                </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="font-size:12px; font-weight:bold;">الطور التعليمي</label>
+                <select id="sup-level" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                    <option value="">-- اختر الطور --</option>
+                    <option value="ابتدائي">ابتدائي</option>
+                    <option value="متوسط">متوسط</option>
+                    <option value="ثانوي">ثانوي</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">الدائرة</label>
+                    <select id="sup-daaira" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                        <option value="">-- اختر --</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; font-weight:bold;">البلدية</label>
+                    <select id="sup-baladiya" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                        <option value="">-- اختر --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold;">المؤسسة</label>
+                <select id="sup-school" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
+                    <option value="">-- يرجى اختيار الطور والبلدية أولاً --</option>
+                </select>
+            </div>
+
+            <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
+
+            <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px; border:1px solid #ffeeba; color:#856404;">
+                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وانسخ البيانات:
+            </div>
+
+            <div style="text-align:center; margin-bottom:15px;">
+                <button type="button" onclick="window.handleTVAction()" 
+                        style="background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; width:100%;">
+                    <i class="fas fa-external-link-alt"></i> فتح البرنامج أو تحميله الآن
+                </button>
+            </div>
             
-            <div style="max-height: 60vh; overflow-y: auto; padding: 2px 10px; margin-bottom: 10px;">
-                
-                <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9; color:#0d47a1; text-align:center;">
-                    <i class="fas fa-info-circle"></i> يرجى ملء البيانات لطلب الدعم
+            <div style="display:flex; gap:10px;">
+                 <div style="flex:1;">
+                    <label style="font-weight:bold; font-size:12px;">ID (المعرف)</label>
+                    <input id="tv-id" class="swal2-input" placeholder="123 456 789" maxlength="10"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                           style="width:100%; margin:5px 0; height:35px; direction:ltr;">
                 </div>
-
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:bold;">الاسم واللقب</label>
-                        <input id="sup-name" class="swal2-input" placeholder="حروف عربية فقط" style="width:100%; margin:5px 0; height:35px; font-size:13px;">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:bold;">رقم الهاتف</label>
-                        <input id="sup-fake-phone" style="display:none">
-                        <input id="sup-phone" type="tel" class="swal2-input" placeholder="06XXXXXXXX" maxlength="10" 
-                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               style="width:100%; margin:5px 0; height:35px; font-size:13px; direction:ltr;">
-                    </div>
+                <div style="flex:1;">
+                    <label style="font-weight:bold; font-size:12px;">Password</label>
+                    <input id="tv-pass" class="swal2-input" placeholder="****" maxlength="10"
+                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')"
+                           style="width:100%; margin:5px 0; height:35px; direction:ltr;">
                 </div>
-
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:12px; font-weight:bold;">الطور التعليمي</label>
-                    <select id="sup-level" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
-                        <option value="">-- اختر الطور --</option>
-                        <option value="ابتدائي">ابتدائي</option>
-                        <option value="متوسط">متوسط</option>
-                        <option value="ثانوي">ثانوي</option>
-                    </select>
-                </div>
-
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:bold;">الدائرة</label>
-                        <select id="sup-daaira" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
-                            <option value="">-- اختر --</option>
-                        </select>
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:bold;">البلدية</label>
-                        <select id="sup-baladiya" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
-                            <option value="">-- اختر --</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:15px;">
-                    <label style="font-size:12px; font-weight:bold;">المؤسسة</label>
-                    <select id="sup-school" class="swal2-select" style="width:100%; margin:5px 0; height:35px; font-size:13px; display:block;">
-                        <option value="">-- اختر الطور والبلدية --</option>
-                    </select>
-                </div>
-
-                <hr style="margin: 10px 0; border-top: 1px dashed #ccc;">
-
-                <div style="background:#fff3cd; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; border:1px solid #ffeeba; color:#856404; text-align:center;">
-                    <i class="fas fa-headset"></i> برنامج المساعدة عن بعد (QuickSupport)
-                </div>
-
-                <div style="display:flex; gap:10px; justify-content: center; margin-bottom:15px;">
-                    <button type="button" onclick="window.openTV()" 
-                            style="flex:1; background:#17a2b8; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">
-                        <i class="fas fa-play"></i> فتح البرنامج
-                    </button>
-                    
-                    <button type="button" onclick="window.downloadTV()" 
-                            style="flex:1; background:#6c757d; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:12px;">
-                        <i class="fas fa-download"></i> تحميل البرنامج
-                    </button>
-                </div>
-                
-                <div style="display:flex; gap:10px;">
-                     <div style="flex:1;">
-                        <label style="font-weight:bold; font-size:12px;">ID (المعرف)</label>
-                        <input id="tv-id" class="swal2-input" placeholder="أرقام فقط" maxlength="10"
-                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                               style="width:100%; margin:5px 0; height:35px; direction:ltr;">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-weight:bold; font-size:12px;">Password</label>
-                        <input id="tv-pass" class="swal2-input" placeholder="بدون رموز" maxlength="10"
-                               oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')"
-                               style="width:100%; margin:5px 0; height:35px; direction:ltr;">
-                    </div>
-                </div>
-            </div> 
+            </div>
         </div>
     `;
 
-    // 4. تشغيل النافذة
+    // --- 3. وظيفة الزر الذكي (كما هي) ---
+    window.handleTVAction = function() {
+        const tvUrl = "teamviewer8://"; 
+        const downloadUrl = "https://download.teamviewer.com/download/TeamViewerQS.exe";
+        
+        const start = Date.now();
+        window.location.href = tvUrl;
+
+        setTimeout(() => {
+            if (Date.now() - start < 1500) {
+                Swal.showValidationMessage('جاري تحميل البرنامج.. يرجى الضغط عليه لتشغيله بعد اكتمال التحميل');
+                window.open(downloadUrl, '_blank');
+            }
+        }, 1000);
+    };
+
+    // --- 4. تشغيل النافذة ومنطق الربط بين القوائم + التحقق الصارم ---
     const { value: formValues } = await Swal.fire({
         title: 'طلب دعم فني مباشر',
         allowOutsideClick: false,
         html: htmlForm,
         width: '500px',
         showCancelButton: true,
-        confirmButtonText: 'إرسال الطلب',
+        confirmButtonText: 'إرسال الطلب الآن',
         cancelButtonText: 'إلغاء',
         confirmButtonColor: '#28a745',
-        heightAuto: false, 
-        customClass: {
-            popup: 'swal-fullscreen-fix'
-        },
         didOpen: () => {
+             // ... (نفس كود تعبئة القوائم المنسدلة السابق تماماً) ...
              const levelSel = document.getElementById('sup-level');
              const daairaSel = document.getElementById('sup-daaira');
              const baladiyaSel = document.getElementById('sup-baladiya');
              const schoolSel = document.getElementById('sup-school');
 
-             // تعبئة الدوائر
              Object.keys(baladiyaMap).forEach(d => {
                  daairaSel.add(new Option(d, d));
              });
 
-             // عند تغيير الدائرة
              daairaSel.addEventListener('change', () => {
                  baladiyaSel.innerHTML = '<option value="">-- اختر --</option>';
                  const selectedDaaira = daairaSel.value;
@@ -1858,7 +1882,6 @@ window.sendSupportRequest = async function() {
                  updateSchools();
              });
 
-             // دالة تحديث المدارس
              function updateSchools() {
                  schoolSel.innerHTML = '<option value="">-- اختر المؤسسة --</option>';
                  const lvl = levelSel.value;
@@ -1887,42 +1910,60 @@ window.sendSupportRequest = async function() {
              levelSel.addEventListener('change', updateSchools);
         },
         preConfirm: () => {
+            // جلب القيم
             const rawName = document.getElementById('sup-name').value.trim();
             const rawPhone = document.getElementById('sup-phone').value.trim();
             const rawTvId = document.getElementById('tv-id').value.trim();
             const rawTvPass = document.getElementById('tv-pass').value.trim();
+            
+            const level = document.getElementById('sup-level').value;
+            const daaira = document.getElementById('sup-daaira').value;
+            const baladiya = document.getElementById('sup-baladiya').value;
             const school = document.getElementById('sup-school').value;
 
-            // التحقق (Validation)
+            // --- قواعد التحقق (Validation Logic) ---
+
+            // 1. التحقق من ملء الحقول الأساسية
             if (!rawName || !rawPhone || !school || !rawTvId || !rawTvPass) {
                 Swal.showValidationMessage('يرجى ملء كافة البيانات المطلوبة');
                 return false;
             }
+
+            // 2. التحقق من الاسم (حروف عربية ومسافات فقط)
             const arabicRegex = /^[\u0600-\u06FF\s]+$/;
             if (!arabicRegex.test(rawName)) {
                 Swal.showValidationMessage('الاسم يجب أن يحتوي على حروف عربية فقط');
                 return false;
             }
+
+            // 3. التحقق من الهاتف (10 أرقام، يبدأ بـ 05, 06, 07)
             const phoneRegex = /^(05|06|07)[0-9]{8}$/;
             if (!phoneRegex.test(rawPhone)) {
-                Swal.showValidationMessage('رقم الهاتف غير صحيح (يجب أن يبدأ بـ 05, 06, 07 ويتكون من 10 أرقام)');
-                return false;
-            }
-            if (!/^[0-9]+$/.test(rawTvId)) {
-                Swal.showValidationMessage('معرف ID يجب أن يكون أرقاماً فقط');
-                return false;
-            }
-            if (!/^[a-zA-Z0-9]+$/.test(rawTvPass)) {
-                Swal.showValidationMessage('كلمة المرور لا تقبل الرموز');
+                Swal.showValidationMessage('رقم الهاتف يجب أن يتكون من 10 أرقام ويبدأ بـ 05، 06 أو 07');
                 return false;
             }
 
+            // 4. التحقق من ID (أرقام فقط، بحد أقصى 10 خانات) - الطول محدد في HTML ولكن نتأكد هنا
+            const idRegex = /^[0-9]+$/;
+            if (!idRegex.test(rawTvId)) {
+                Swal.showValidationMessage('معرف ID يجب أن يحتوي على أرقام فقط');
+                return false;
+            }
+
+            // 5. التحقق من Password (حروف وأرقام فقط، لا رموز)
+            const passRegex = /^[a-zA-Z0-9]+$/;
+            if (!passRegex.test(rawTvPass)) {
+                Swal.showValidationMessage('كلمة المرور يجب أن لا تحتوي على رموز خاصة');
+                return false;
+            }
+
+            // إرجاع البيانات النظيفة
             return {
                 name: rawName,
                 phone: rawPhone,
-                level: document.getElementById('sup-level').value,
-                daaira: document.getElementById('sup-daaira').value,
-                baladiya: document.getElementById('sup-baladiya').value,
+                level: level,
+                daaira: daaira,
+                baladiya: baladiya,
                 school: school,
                 tvId: rawTvId,
                 tvPass: rawTvPass
@@ -1930,11 +1971,15 @@ window.sendSupportRequest = async function() {
         }
     });
 
-    // 5. إرسال البيانات (Firebase)
+    // --- 5. إرسال البيانات إلى Firebase (نفس الكود السابق) ---
     if (formValues) {
-        Swal.fire({ title: 'جاري الإرسال...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ 
+            title: 'جاري التحقق من حالة الطلب...', 
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading() 
+        });
+
         try {
-            // التحقق من وجود طلب سابق
             const existingRequests = await db.collection("support_requests")
                 .where("school_name", "==", formValues.school)
                 .where("status", "==", "pending")
@@ -1968,7 +2013,6 @@ window.sendSupportRequest = async function() {
                 return; 
             }
 
-            // إضافة الطلب الجديد
             await db.collection("support_requests").add({
                 director_name: formValues.name,
                 phone: formValues.phone,
@@ -1982,7 +2026,7 @@ window.sendSupportRequest = async function() {
                 created_at: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            Swal.fire('تم بنجاح', 'تم إرسال طلبك بنجاح', 'success');
+            Swal.fire('تم بنجاح', 'وصل طلبك، يرجى إبقاء البرنامج مفتوحاً', 'success');
 
         } catch (e) {
             console.error(e);
@@ -1990,6 +2034,7 @@ window.sendSupportRequest = async function() {
         }
     }
 };
+
 
 
 
