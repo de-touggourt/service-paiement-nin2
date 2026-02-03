@@ -2884,37 +2884,34 @@ window.startSupportListener = function() {
 // ==========================================
 // 🛠️ دالة الاتصال الذكي بـ TeamViewer
 // ==========================================
-window.connectToTeamViewer = function(id, pass) {
-    // 1. نسخ كلمة المرور للحافظة تلقائياً
-    navigator.clipboard.writeText(pass).then(() => {
-        // 2. إظهار تنبيه صغير
-        const Toast = Swal.mixin({
-            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true
-        });
-        Toast.fire({ 
-            icon: 'success', 
-            title: 'تم نسخ كلمة المرور! (فقط اضغط لصق)' 
-        });
+// 1. الدالة المسؤولة عن الاتصال والنسخ الذكي
+window.connectToTeamViewer = async function(tvId, tvPass) {
+    const cleanId = tvId.replace(/\s/g, ''); // إزالة الفراغات من المعرف
+    
+    try {
+        // نسخ كلمة السر للحافظة أولاً
+        await navigator.clipboard.writeText(tvPass);
+        
+        // محاولة فتح البرنامج وتمرير المعرف
+        window.location.href = `teamviewer10://control?device=${cleanId}`;
 
-        // 3. فتح TeamViewer مع تمرير المعرف (ID)
-        // نحاول عدة صيغ لضمان فتح أي نسخة مثبتة
-        setTimeout(() => {
-            window.location.href = `teamviewer10://control?device=${id}`;
-        }, 500);
-    }).catch(err => {
-        console.error('فشل النسخ', err);
-        // في حال فشل النسخ التلقائي، نفتح البرنامج فقط
-        window.location.href = `teamviewer10://control?device=${id}`;
-    });
+        // تنبيه صغير للمستخدم
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'تم نسخ كلمة السر! المعرف سيعمل تلقائياً في البرنامج',
+            showConfirmButton: false,
+            timer: 3000
+        });
+    } catch (err) {
+        console.error('فشل النسخ:', err);
+    }
 };
 
-
-// ==========================================
-// 📋 نافذة عرض الطلبات (محدثة بالحقول الجديدة وتاريخ السيرفر)
-// ==========================================
+// 2. دالة عرض الطلبات المحدثة (8 أعمدة)
 window.openSupportRequestsModal = async function() {
     try {
-        // جلب البيانات من Firebase (ترتيب تنازلي حسب وقت الإنشاء)
         const q = query(collection(db, "support_requests"), where("status", "==", "pending"), orderBy("created_at", "desc"));
         const snapshot = await getDocs(q);
         
@@ -2923,7 +2920,6 @@ window.openSupportRequestsModal = async function() {
         snapshot.forEach((docSnap) => {
             const d = docSnap.data();
             
-            // معالجة التاريخ والوقت
             let datePart = "---";
             let timePart = "---";
             if (d.created_at && typeof d.created_at.toDate === 'function') {
@@ -2933,61 +2929,60 @@ window.openSupportRequestsModal = async function() {
             }
 
             tableRows += `
-                <tr style="border-bottom: 1px solid #edf2f7; vertical-align: middle; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 12px 8px; text-align: center; color: #475569; font-size: 12px; font-weight: 500;">${datePart}</td>
+                <tr style="border-bottom: 1px solid #edf2f7; vertical-align: middle; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 12px 5px; text-align: center; color: #475569; font-size: 11px;">${datePart}</td>
                     
-                    <td style="padding: 12px 8px; text-align: center; color: #64748b; font-size: 12px;">${timePart}</td>
+                    <td style="padding: 12px 5px; text-align: center; color: #64748b; font-size: 11px;">${timePart}</td>
                     
-                    <td style="padding: 12px 8px; font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name || '---'}</td>
+                    <td style="padding: 12px 10px; font-weight: 700; color: #1e293b; font-size: 13px;">${d.school_name || '---'}</td>
                     
-                    <td style="padding: 12px 8px; color: #334155; font-size: 13px;">${d.director_name || '---'}</td>
+                    <td style="padding: 12px 10px; color: #334155; font-size: 12px;">${d.director_name || '---'}</td>
                     
-                    <td style="padding: 12px 8px; text-align: center;">
-                        <span dir="ltr" style="color: #0284c7; font-weight: 600; font-family: monospace;">${d.phone || '---'}</span>
+                    <td style="padding: 12px 10px; text-align: center;">
+                        <span dir="ltr" style="color: #0284c7; font-weight: 600; font-family: monospace; font-size: 12px;">${d.phone || '---'}</span>
                     </td>
                     
-                    <td style="padding: 12px 8px; text-align: center;">
-                        <span style="font-family: monospace; background: #f8fafc; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 14px;">${d.tv_id}</span>
+                    <td style="padding: 12px 10px; text-align: center;">
+                        <span style="font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px;">${d.tv_id}</span>
                     </td>
                     
-                    <td style="padding: 12px 8px; text-align: center;">
-                        <span style="font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 14px;">${d.tv_pass}</span>
+                    <td style="padding: 12px 10px; text-align: center;">
+                        <span style="font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px;">${d.tv_pass}</span>
                     </td>
                     
-                    <td style="padding: 12px 8px; text-align: left;">
-                        <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                    <td style="padding: 12px 10px; text-align: left;">
+                        <div style="display: flex; gap: 4px; justify-content: flex-end;">
                             <button onclick="window.connectToTeamViewer('${d.tv_id}', '${d.tv_pass}')" 
-                                    style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-external-link-alt"></i> اتصال
+                                    style="background: #10b981; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-play"></i> اتصال
                             </button>
                             <button onclick="window.closeSupportRequest('${docSnap.id}')" 
-                                    style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-trash"></i> حذف
+                                    style="background: #ef4444; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </td>
                 </tr>`;
         });
 
-        const noDataHtml = `<tr><td colspan="8" style="padding: 40px; text-align: center; color: #94a3b8;">لا توجد طلبات واردة حالياً</td></tr>`;
+        const noDataHtml = `<tr><td colspan="8" style="padding: 50px; text-align: center; color: #94a3b8;">لا توجد طلبات واردة حالياً</td></tr>`;
 
-        // عرض النافذة باستخدام SweetAlert2
         Swal.fire({
-            title: '<div style="text-align: right; font-size: 18px; font-weight: 800; color: #1e293b;"><i class="fas fa-list-ul" style="color: #3b82f6; margin-left: 10px;"></i> قائمة طلبات الدعم الفني</div>',
-            width: '1100px',
+            title: '<div style="text-align: right; font-size: 18px; font-weight: 800; color: #1e293b;"><i class="fas fa-headset" style="color: #3b82f6; margin-left: 10px;"></i> قائمة طلبات الدعم الفني</div>',
+            width: '1200px',
             html: `
-                <div style="overflow-x: auto; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 10px;">
-                    <table style="width: 100%; border-collapse: collapse; direction: rtl; text-align: right; font-family: 'Cairo', sans-serif;">
+                <div style="overflow-x: auto; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 10px; background: white;">
+                    <table style="width: 100%; border-collapse: collapse; direction: rtl; text-align: right;">
                         <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                             <tr>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 90px;">التاريخ</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 80px;">الوقت</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800;">اسم المؤسسة</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; width: 140px;">المدير</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 110px;">الهاتف</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 130px;">ID</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 100px;">PW</th>
-                                <th style="padding: 12px 8px; color: #64748b; font-size: 11px; font-weight: 800; text-align: left; width: 150px;">الإجراءات</th>
+                                <th style="padding: 12px 5px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 90px;">التاريخ</th>
+                                <th style="padding: 12px 5px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 80px;">الوقت</th>
+                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800;">اسم المؤسسة</th>
+                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; width: 140px;">المدير</th>
+                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 110px;">الهاتف</th>
+                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 120px;">المعرف ID</th>
+                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: center; width: 90px;">كلمة السر</th>
+                                <th style="padding: 12px 10px; color: #64748b; font-size: 11px; font-weight: 800; text-align: left; width: 140px;">الإجراء</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -3003,7 +2998,7 @@ window.openSupportRequestsModal = async function() {
 
     } catch (error) {
         console.error(error);
-        Swal.fire('خطأ', 'تعذر جلب البيانات من الخادم', 'error');
+        Swal.fire('خطأ', 'فشل تحميل البيانات', 'error');
     }
 };
 
@@ -3028,5 +3023,6 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
