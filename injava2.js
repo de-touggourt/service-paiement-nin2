@@ -1807,9 +1807,24 @@ window.sendSupportRequest = async function() {
 
             <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
 
-            <div style="background:#fff3cd; padding:10px; border-radius:8px; margin-bottom:10px; font-size:12px; border:1px solid #ffeeba; color:#856404;">
-                <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>TeamViewer QuickSupport</b> وانسخ البيانات:
-            </div>
+            <div style="
+    background:#fff3cd;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:10px;
+    font-size:12px;
+    border:1px solid #ffeeba;
+    color:#856404;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    text-align:center;
+">
+    <i class="fas fa-exclamation-triangle"></i>
+    افتح برنامج <b>TeamViewer QuickSupport</b> وانسخ البيانات:
+</div>
+
 
             <div style="text-align:center; margin-bottom:15px; font-size:12px; color:#666;">
                 <span>إن لم يكن لديك البرنامج يمكنك </span>
@@ -2024,6 +2039,7 @@ window.sendSupportRequest = async function() {
         }
     }
 };
+
 
 
 
