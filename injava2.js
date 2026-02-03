@@ -1817,7 +1817,7 @@ window.sendSupportRequest = async function() {
                    style="color:#1e88e5; font-weight:bold; text-decoration:none; border-bottom:1px solid transparent; transition:0.3s;"
                    onmouseover="this.style.borderBottom='1px solid #1e88e5'"
                    onmouseout="this.style.borderBottom='1px solid transparent'">
-                   <i class="fas fa-download"></i> تحميله من هنا
+                   تحميله من هنا <i class="fas fa-download"></i>
                 </a>
             </div>
             
@@ -1829,7 +1829,7 @@ window.sendSupportRequest = async function() {
                            style="width:100%; margin:5px 0; height:35px; direction:ltr;">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-weight:bold; font-size:12px;">Password</label>
+                    <label style="font-weight:bold; font-size:12px;">Password (كلمة المرور)</label>
                     <input id="tv-pass" class="swal2-input" placeholder="****" maxlength="10"
                            oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')"
                            style="width:100%; margin:5px 0; height:35px; direction:ltr;">
@@ -2024,6 +2024,7 @@ window.sendSupportRequest = async function() {
         }
     }
 };
+
 
 
 
