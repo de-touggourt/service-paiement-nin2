@@ -2883,28 +2883,28 @@ window.startSupportListener = function() {
 // ==========================================
 // 🛠️ دالة مساعدة لنسخ النصوص (للمعرف وكلمة السر في الجدول)
 // ==========================================
-window.copyData = async function(text, type) {
+window.copyData = async function(element, text) {
     try {
+        // 1. النسخ للحافظة
         await navigator.clipboard.writeText(text);
-        const title = type === 'id' ? 'تم نسخ المعرف' : 'تم نسخ كلمة السر';
         
-        // تنبيه صغير وسريع
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
+        // 2. حفظ الشكل القديم للعنصر
+        const originalHtml = element.innerHTML;
+        const originalStyle = element.getAttribute('style');
 
-        Toast.fire({
-            icon: 'success',
-            title: title
-        });
+        // 3. تغيير الشكل ليدل على النجاح (بدون إغلاق النافذة)
+        element.innerHTML = '<i class="fas fa-check"></i> منسوخ';
+        element.style.background = '#10b981'; // خلفية خضراء
+        element.style.color = '#ffffff';      // نص أبيض
+        element.style.borderColor = '#10b981';
+        element.style.width = element.offsetWidth + 'px'; // تثبيت العرض لمنع الاهتزاز (اختياري)
+
+        // 4. إعادة الشكل الأصلي بعد ثانية ونصف
+        setTimeout(() => {
+            element.innerHTML = originalHtml;
+            element.setAttribute('style', originalStyle);
+        }, 1500);
+
     } catch (err) {
         console.error('فشل النسخ', err);
     }
@@ -2986,21 +2986,23 @@ window.openSupportRequestsModal = async function() {
                         <span dir="ltr" style="color: #0284c7; font-weight: 600; font-family: monospace; font-size: 12px;">${d.phone || '---'}</span>
                     </td>
                     
-                    <td style="padding: 12px 10px; text-align: center;">
-                        <span onclick="window.copyData('${d.tv_id}', 'id')" 
-                              title="اضغط لنسخ المعرف"
-                              style="cursor: pointer; font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block;">
-                            ${d.tv_id} <i class="far fa-copy" style="font-size: 10px; color: #94a3b8;"></i>
-                        </span>
-                    </td>
-                    
-                    <td style="padding: 12px 10px; text-align: center;">
-                        <span onclick="window.copyData('${d.tv_pass}', 'pass')"
-                              title="اضغط لنسخ كلمة السر"
-                              style="cursor: pointer; font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block;">
-                            ${d.tv_pass} <i class="far fa-copy" style="font-size: 10px; color: #d97706;"></i>
-                        </span>
-                    </td>
+                   // 1. عمود المعرف (ID)
+<td style="padding: 12px 10px; text-align: center;">
+    <span onclick="window.copyData(this, '${d.tv_id}')" 
+          title="اضغط للنسخ"
+          style="cursor: pointer; font-family: monospace; background: #f1f5f9; color: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block; min-width: 80px;">
+        ${d.tv_id} <i class="far fa-copy" style="font-size: 10px; color: #94a3b8;"></i>
+    </span>
+</td>
+
+// 2. عمود كلمة السر (Pass)
+<td style="padding: 12px 10px; text-align: center;">
+    <span onclick="window.copyData(this, '${d.tv_pass}')"
+          title="اضغط للنسخ"
+          style="cursor: pointer; font-family: monospace; background: #fffbeb; color: #b45309; padding: 4px 8px; border-radius: 4px; border: 1px solid #fde68a; font-weight: bold; font-size: 13px; transition: 0.2s; display: inline-block; min-width: 60px;">
+        ${d.tv_pass} <i class="far fa-copy" style="font-size: 10px; color: #d97706;"></i>
+    </span>
+</td>
                     
                     <td style="padding: 12px 10px; text-align: left;">
                         <div style="display: flex; gap: 4px; justify-content: flex-end;">
@@ -3076,6 +3078,7 @@ window.closeSupportRequest = async function(id) {
         }
     }
 };
+
 
 
 
