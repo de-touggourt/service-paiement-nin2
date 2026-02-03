@@ -1753,6 +1753,7 @@ window.sendSupportRequest = async function() {
 };
 
     // --- 2. تصميم واجهة النافذة (HTML) مع قيود الإدخال ---
+   // --- 2. تصميم واجهة النافذة (HTML) مع قيود الإدخال ---
     const htmlForm = `
         <div style="direction:rtl; text-align:right; font-family:'Cairo', sans-serif;">
             <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; border:1px solid #90caf9; color:#0d47a1; text-align:center;">
@@ -1810,11 +1811,14 @@ window.sendSupportRequest = async function() {
                 <i class="fas fa-exclamation-triangle"></i> افتح برنامج <b>QuickSupport</b> وانسخ البيانات:
             </div>
 
-            <div style="text-align:center; margin-bottom:15px;">
-                <button type="button" onclick="window.handleTVAction()" 
-                        style="background:#007bff; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; width:100%;">
-                    <i class="fas fa-external-link-alt"></i> فتح البرنامج أو تحميله الآن
-                </button>
+            <div style="text-align:center; margin-bottom:15px; font-size:12px; color:#1e88e5;">
+                <span>إن لم يكن لديك البرنامج يمكنك </span>
+                <a href="https://download.teamviewer.com/download/TeamViewerQS.exe" target="_blank" 
+                   style="color:#1e88e5; font-weight:bold; text-decoration:none; border-bottom:1px solid transparent; transition:0.3s;"
+                   onmouseover="this.style.borderBottom='1px solid #1e88e5'"
+                   onmouseout="this.style.borderBottom='1px solid transparent'">
+                   <i class="fas fa-download"></i> تحميله من هنا
+                </a>
             </div>
             
             <div style="display:flex; gap:10px;">
@@ -1834,21 +1838,9 @@ window.sendSupportRequest = async function() {
         </div>
     `;
 
-    // --- 3. وظيفة الزر الذكي (كما هي) ---
-    window.handleTVAction = function() {
-        const tvUrl = "teamviewer8://"; 
-        const downloadUrl = "https://download.teamviewer.com/download/TeamViewerQS.exe";
-        
-        const start = Date.now();
-        window.location.href = tvUrl;
+    // ملاحظة: يمكنك الآن حذف دالة window.handleTVAction لأننا لم نعد نستخدمها، الرابط أعلاه يقوم بالتحميل المباشر.
 
-        setTimeout(() => {
-            if (Date.now() - start < 1500) {
-                Swal.showValidationMessage('جاري تحميل البرنامج.. يرجى الضغط عليه لتشغيله بعد اكتمال التحميل');
-                window.open(downloadUrl, '_blank');
-            }
-        }, 1000);
-    };
+ 
 
     // --- 4. تشغيل النافذة ومنطق الربط بين القوائم + التحقق الصارم ---
     const { value: formValues } = await Swal.fire({
@@ -2034,6 +2026,7 @@ window.sendSupportRequest = async function() {
         }
     }
 };
+
 
 
 
