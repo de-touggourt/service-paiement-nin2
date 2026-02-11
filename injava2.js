@@ -1420,13 +1420,13 @@ function generateEmployeesTable(data, schoolName) {
                     <i class="fas fa-file-excel"></i> تحميل Excel
                 </button>
 
+    <button onclick="printProfessionalFront()" class="action-btn" style="background-color: #2c3e50;">
+        <i class="fas fa-id-card"></i> طباعة الواجهات (الاحترافي)
+    </button>
+    <button onclick="printProfessionalBack()" class="action-btn" style="background-color: #7f8c8d;">
+        <i class="fas fa-print"></i> طباعة الخلفية الموحدة
+    </button>
 
-    <button onclick="printCardsFront()" class="action-btn" style="background-color: #007bff;">
-        <i class="fas fa-id-card"></i> طباعة واجهة البطاقات
-    </button>
-    <button onclick="printCardsBack()" class="action-btn" style="background-color: #6c757d;">
-        <i class="fas fa-undo"></i> طباعة الصفحة الخلفية
-    </button>
 
             </div>
             <div style="font-size: 14px;font-weight: bold; color: #FF0000;">
@@ -2188,43 +2188,49 @@ function getCardStyles() {
 
 function getCompactStyle() {
     return `
-        @media print { @page { size: A4; margin: 5mm; } }
-        .print-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 10px; 
-            direction: rtl; 
-            font-family: 'Cairo', sans-serif;
-        }
-        .card-front, .card-back {
-            width: 86mm; height: 54mm; 
-            border: 1px solid #000; border-radius: 5px;
-            position: relative; overflow: hidden; background: #fff;
-        }
-        /* تصميم الواجهة */
-        .card-header { display: flex; align-items: center; padding: 5px; font-size: 8px; text-align: center; border-bottom: 1px solid #eee; }
-        .card-header .icon { height: 20px; margin-left: 5px; }
-        .card-title { text-align: center; font-weight: bold; font-size: 14px; background: #f0f0f0; margin: 2px 0; }
-        .card-content { display: flex; padding: 5px; gap: 10px; }
-        .photo-placeholder { width: 60px; height: 70px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #eee; }
-        .details { font-size: 11px; line-height: 1.4; flex: 1; }
-        .job-text { color: #d32f2f; font-weight: bold; }
-        .card-footer { position: absolute; bottom: 0; width: 100%; background: #2e7d32; color: #fff; text-align: center; font-size: 10px; padding: 2px 0; }
+        <style>
+            @media print { @page { size: A4; margin: 5mm; } }
+            .print-grid { 
+                display: grid; 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 10px; 
+                direction: rtl; 
+                font-family: 'Cairo', sans-serif;
+            }
+            .card-front, .card-back {
+                width: 86mm; height: 54mm; 
+                border: 1px solid #000; border-radius: 5px;
+                position: relative; overflow: hidden; background: #fff;
+            }
+            
+            /* --- تنسيق الصورة الخلفية (Watermark) --- */
+            .card-bg-watermark {
+                position: absolute;
+                top: 55%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 75%;
+                opacity: 0.12; /* درجة الشفافية لضمان وضوح النص فوقها */
+                z-index: 0;
+                pointer-events: none;
+            }
 
-        /* تصميم الخلفية */
-        .card-back { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; text-align: center; }
-        .back-title { font-weight: bold; border-bottom: 2px solid #2e7d32; margin-bottom: 10px; font-size: 14px; }
-        .back-list { font-size: 9px; text-align: right; padding-right: 15px; margin: 0; }
-        .back-footer { margin-top: 10px; font-size: 10px; font-weight: bold; color: #666; }
-    `;
-}
+            /* تصميم الواجهة */
+            .card-header { position: relative; z-index: 2; display: flex; align-items: center; padding: 5px; font-size: 8px; text-align: center; border-bottom: 1px solid #eee; background: rgba(255,255,255,0.7); }
+            .card-header .icon { height: 20px; margin-left: 5px; }
+            .card-title { position: relative; z-index: 2; text-align: center; font-weight: bold; font-size: 14px; background: rgba(240, 240, 240, 0.8); margin: 2px 0; }
+            .card-content { position: relative; z-index: 2; display: flex; padding: 5px; gap: 10px; }
+            .photo-placeholder { width: 60px; height: 70px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #eee; background: rgba(255,255,255,0.5); }
+            .details { font-size: 11px; line-height: 1.4; flex: 1; font-weight: bold; }
+            .job-text { color: #d32f2f; font-weight: bold; }
+            .card-footer { position: absolute; bottom: 0; width: 100%; background: #2e7d32; color: #fff; text-align: center; font-size: 10px; padding: 2px 0; z-index: 2; }
 
-function renderAndPrint(content) {
-    const container = document.getElementById("printContainer");
-    const original = container.innerHTML;
-    container.innerHTML = content;
-    window.print();
-    setTimeout(() => { container.innerHTML = original; }, 1000);
+            /* تصميم الخلفية */
+            .card-back { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; text-align: center; }
+            .back-title { font-weight: bold; border-bottom: 2px solid #2e7d32; margin-bottom: 10px; font-size: 14px; }
+            .back-list { font-size: 9px; text-align: right; padding-right: 15px; margin: 0; }
+            .back-footer { margin-top: 10px; font-size: 10px; font-weight: bold; color: #666; }
+        </style>`;
 }
 
 
@@ -2258,11 +2264,13 @@ function printCardsFront() {
 
     if (confirmedOnly.length === 0) return Swal.fire("تنبيه", "لا توجد بيانات مؤكدة", "warning");
 
-    let html = `<style>${getCompactStyle()}</style><div class="print-grid">`;
+    let html = `${getCompactStyle()}<div class="print-grid">`;
     
     confirmedOnly.forEach(emp => {
         html += `
             <div class="card-front">
+                <img src="https://i.ibb.co/p6S9X70/logo-back.png" class="card-bg-watermark">
+
                 <div class="card-header">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Flag_of_Algeria.svg/1200px-Flag_of_Algeria.svg.png" class="icon">
                     <div class="header-text">الجمهورية الجزائرية الديمقراطية الشعبية<br>وزارة التربية الوطنية</div>
@@ -2271,13 +2279,13 @@ function printCardsFront() {
                 <div class="card-content">
                     <div class="photo-placeholder"><i class="fas fa-user"></i></div>
                     <div class="details">
-                        <div><b>اللقب:</b> ${emp.fmn}</div>
-                        <div><b>الاسم:</b> ${emp.frn}</div>
-                        <div><b>الميلاد:</b> ${fmtDate(emp.diz)}</div>
-                        <div class="job-text"><b>الوظيفة:</b> ${getJob(emp.gr)}</div>
+                        <div><span>اللقب:</span> <b>${emp.fmn}</b></div>
+                        <div><span>الاسم:</span> <b>${emp.frn}</b></div>
+                        <div><span>الميلاد:</span> <b>${fmtDate(emp.diz)}</b></div>
+                        <div class="job-text"><span>الوظيفة:</span> <b>${getJob(emp.gr)}</b></div>
                     </div>
                 </div>
-                <div class="card-footer">NIN: ${emp.nin || '------------------'}</div>
+                <div class="card-footer">رقم التعريف الوطني: ${emp.nin || '------------------'}</div>
             </div>`;
     });
     html += `</div>`;
