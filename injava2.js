@@ -1420,11 +1420,11 @@ function generateEmployeesTable(data, schoolName) {
                     <i class="fas fa-file-excel"></i> تحميل Excel
                 </button>
 
-    <button onclick="printProfessionalFront()" class="action-btn" style="background-color: #2c3e50;">
-        <i class="fas fa-id-card"></i> طباعة الواجهات (الاحترافي)
+ <button onclick="printProfessionalFront()" class="action-btn" style="background-color: #2c3e50;">
+        <i class="fas fa-id-card"></i> واجهة البطاقات المهنية
     </button>
-    <button onclick="printProfessionalBack()" class="action-btn" style="background-color: #7f8c8d;">
-        <i class="fas fa-print"></i> طباعة الخلفية الموحدة
+    <button onclick="printCardsBack()" class="action-btn" style="background-color: #7f8c8d;">
+        <i class="fas fa-undo"></i> طباعة الخلفية الموحدة
     </button>
 
 
