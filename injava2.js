@@ -1419,6 +1419,12 @@ function generateEmployeesTable(data, schoolName) {
                 <button onclick="exportTableToExcel('empTable', '${schoolName}')" class="action-btn btn-excel">
                     <i class="fas fa-file-excel"></i> تحميل Excel
                 </button>
+              
+             // أضف هذا الزر بجانب زر طباعة القائمة وزر Excel
+<button onclick="printProfessionalCards()" class="action-btn" style="background-color: #e67e22;">
+    <i class="fas fa-id-card"></i> طباعة البطاقات المهنية
+</button>
+                
             </div>
             <div style="font-size: 14px;font-weight: bold; color: #FF0000;">
         *  ملاحظة: يمكنك الضغط على الموظف الغير مؤكدة بياناته و تأكيدها من خلال قائمة الموظفين.
@@ -2041,7 +2047,96 @@ window.sendSupportRequest = async function() {
 };
 
 
+function printProfessionalCards() {
+    const data = window.currentListContext;
+    if (!data || data.length === 0) return;
 
+    // فلترة الموظفين المؤكدين فقط
+    const confirmedOnly = data.filter(d => d.confirmed === true || String(d.confirmed).toLowerCase() === "true");
+
+    if (confirmedOnly.length === 0) {
+        return Swal.fire("تنبيه", "لا توجد بيانات مؤكدة لطباعة البطاقات", "warning");
+    }
+
+    let cardsHtml = '';
+    confirmedOnly.forEach((emp) => {
+        cardsHtml += `
+        <div class="prof-card">
+            <div class="card-header">
+                <div class="header-right">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+                <div class="header-main">
+                    <div class="sub-header">وزارة التربية الوطنية</div>
+                    <div class="sub-header">مديرية التربية لولاية توقرت</div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="right-panel">
+                    <div class="year-ref">2026/ :الرقم</div>
+                    <div class="director-sig">مدير التربية</div>
+                </div>
+                
+                <div class="left-panel">
+                    <div class="card-title">بطاقة التعريف المهنية</div>
+                    <div class="emp-info">
+                        <p><span>اللقب والاسم:</span> ${emp.fmn} ${emp.frn}</p>
+                        <p><span>تاريخ الميلاد:</span> ${fmtDate(emp.diz)}</p>
+                        <p><span>الرتبة:</span> ${getJob(emp.gr)}</p>
+                        <p><span>مكان العمل:</span> ${emp.schoolName}</p>
+                        <p><span>توقرت في:</span> ${new Date().toLocaleDateString('ar-DZ')}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                على السلطات المدنية والعسكرية أن تسمح لحامل هذه البطاقة بالمرور في كل الحالات
+            </div>
+        </div>
+        `;
+    });
+
+    const printContainer = document.getElementById("printContainer");
+    const originalContent = printContainer.innerHTML;
+    
+    // إضافة الـ CSS الخاص بالبطاقة
+    printContainer.innerHTML = `
+        <style>
+            @media print {
+                body * { visibility: hidden; }
+                #printContainer, #printContainer * { visibility: visible; }
+                #printContainer { position: absolute; left: 0; top: 0; width: 100%; }
+            }
+            .prof-card {
+                width: 540px; height: 340px;
+                border: 2px solid #000; margin: 10px auto;
+                direction: rtl; font-family: 'Cairo', sans-serif;
+                position: relative; background: #fff;
+                page-break-inside: avoid; display: flex; flex-direction: column;
+            }
+            .card-header {
+                text-align: center; border-bottom: 1px solid #000;
+                padding: 5px; font-weight: bold; font-size: 14px;
+            }
+            .header-main { display: flex; justify-content: space-around; font-size: 12px; margin-top: 5px; }
+            .card-body { display: flex; flex: 1; border-bottom: 1px solid #000; }
+            .right-panel { width: 30%; border-left: 1px solid #000; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
+            .left-panel { width: 70%; padding: 10px; }
+            .card-title { text-align: center; font-weight: bold; font-size: 18px; text-decoration: underline; margin-bottom: 10px; }
+            .emp-info p { margin: 8px 0; font-size: 14px; font-weight: bold; }
+            .emp-info span { color: #333; font-weight: normal; margin-left: 5px; }
+            .year-ref { font-size: 14px; font-weight: bold; }
+            .director-sig { text-align: center; font-weight: bold; margin-bottom: 20px; }
+            .card-footer {
+                background: #f0f0f0; font-size: 11px; text-align: center;
+                padding: 5px; font-weight: bold;
+            }
+        </style>
+        ${cardsHtml}
+    `;
+
+    window.print();
+    setTimeout(() => { printContainer.innerHTML = originalContent; }, 1000);
+}
 
 
 
